@@ -14,6 +14,23 @@ We pull company data from **five external sources**, clean and classify each one
 
 As of 2026-04-13 the registry contains **7,608 rows**: 2,659 matched in both Dealroom and Réseau Capital, 2,560 in Dealroom only, 2,389 in Réseau Capital only.
 
+**Applying our current startup definition** (QT-anchored only — pending v3 extension to include RC_ONLY): **4,670 Quebec tech startups**, split as:
+
+| Lifecycle | N | % | Notes |
+|---|---:|---:|---|
+| **active** | **2,539** | 54.4% | created 2011+, operational |
+| **mature** | 948 | 20.3% | created 1991-2010, operational |
+| **acquired** | 501 | 10.7% | DR status = acquired |
+| **closed** | 232 | 5.0% | closed or low-activity |
+| **unknown_age** | 421 | 9.0% | operational but no launch year recorded |
+| unknown_status | 29 | 0.6% | null status |
+
+**Sub-ecosystems worth flagging** (same filter):
+- **Pharma / biotech:** 507 companies, **58% active** — the healthiest profile in the data.
+- **Gaming:** 106 companies, **64% active** — deep indie layer on top of the AAA-studio-acquired tier (16% acquired, highest of any sector cut).
+
+> ⚠️ **Known gap:** this 4,670 count applies the startup filter only to `ENTITY_TYPE IN ('MATCHED','QT_ONLY')`. The 2,389 `RC_ONLY` rows (Réseau Capital Quebec companies not in our Dealroom whitelist) are not yet counted. A v3 of the Q3 diagnostic extends the filter to include RC_ONLY using unified launch year and status fields via `COALESCE(DRM_*, RC_*)`. Numbers will be refreshed once v3 runs.
+
 ---
 
 ## The pipeline at a glance
@@ -290,6 +307,49 @@ Each row carries:
 Empty as of this run — review queue infrastructure is in place but no decisions have been uploaded yet.
 
 Refresh all numbers by running `ecosystem/sql/00_diagnostics/pipeline_row_counts.sql` (next section).
+
+---
+
+## Startup definition and lifecycle taxonomy
+
+The `STARTUP_REGISTRY` table is our raw universe of companies from all sources. When a team member asks "how many Quebec startups do we have?", we apply a **startup filter** on top of the registry.
+
+### Canonical startup filter (v2, 2026-04-13)
+
+```sql
+ENTITY_TYPE IN ('MATCHED', 'QT_ONLY')                -- v3 will also include RC_ONLY
+AND NOT COALESCE(IS_STARTUP_BLACKLISTED, FALSE)       -- manual blacklist veto
+AND NOT COALESCE(FLAG_NON_TECH_NAME_HIT, FALSE)       -- Q2 non-tech-name veto
+AND (DRM_LAUNCH_YEAR IS NULL OR DRM_LAUNCH_YEAR > 1990) -- pre-internet cutoff
+```
+
+**Why the pre-1990 cut:** companies born before the internet era aren't meaningfully "startups" by any contemporary definition. Null launch year is kept as an `unknown_age` bucket rather than dropped, so ~421 operational rows with incomplete profiles stay visible for triage.
+
+**Why non-tech-name veto:** Q2 (2026-04-10) sampled 50 unmatched rating-A Dealroom rows and found a consistent pattern of companies mislabeled as "ICT / Enterprise Software" that are actually reno shops, moving companies, services agencies, etc. (Rénovation Guy Parisien, Déménagement Transat Montréal, Digital Marketing Consortium of Canada). We flag these by name-keyword scan and veto them from the startup filter until they're manually reviewed.
+
+### Lifecycle buckets
+
+```
+acquired     → DRM_COMPANY_STATUS = 'acquired'
+closed       → DRM_COMPANY_STATUS IN ('closed', 'low-activity')
+mature       → operational AND 1991 ≤ launch_year ≤ 2010
+active       → operational AND launch_year ≥ 2011
+unknown_age  → operational AND launch_year IS NULL
+```
+
+**Why age-only:** an earlier v1 rule used size and capital triggers too (`employees ≥ 250 OR funding ≥ $100M`). In practice those triggers fired on ~6% and ~1.5% of mature rows — age alone captured 99% of the signal. Dropping them simplified the story without losing anything meaningful.
+
+**How to tune:** thresholds live in `ecosystem/sql/00_diagnostics/Q3_startup_filter_and_lifecycle.sql`. Edit the `>` and `>=` values in the `_Q3_STARTUPS` CREATE statement; no other file needs to change.
+
+### Sector flags
+
+Pharma / biotech / services / gaming are **flags on the rows, not exclusions from the filter**. Legitimate startups exist in all of these sectors. The flags let us surface sub-ecosystem cuts (like the pharma 58%-active or gaming 64%-active findings above) without removing them from the main count.
+
+### What's intentionally not a startup
+- `ENTITY_TYPE = 'RC_ONLY'` — *until v3 ships.* These are Réseau Capital Quebec companies not in Dealroom's A+/A/B whitelist.
+- `DRM_LAUNCH_YEAR ≤ 1990` — pre-internet era.
+- `FLAG_NON_TECH_NAME_HIT = TRUE` — non-tech name veto pending manual review.
+- `IS_STARTUP_BLACKLISTED = TRUE` — manually rejected via `REF.MANUAL_REVIEW_DECISIONS`.
 
 ---
 
