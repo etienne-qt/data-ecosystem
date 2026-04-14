@@ -1,0 +1,23 @@
+-- =============================================================================
+-- 03_SILVER_GEO_ENRICHMENT.sql
+-- =============================================================================
+USE DATABASE DEV_QUEBECTECH;
+
+CREATE OR REPLACE TABLE SILVER.DRM_GEO_ENRICHMENT_SILVER
+COPY GRANTS
+AS
+SELECT
+  c.DEALROOM_ID,
+  c.HQ_CITY,
+  UTIL.CLEAN_CITY_KEY(c.HQ_CITY) AS HQ_CITY_KEY,
+
+  m.AGGLOMERATION,
+  m.AGGLOMERATION_DETAILS,
+  m.MRC,
+  m.REGION_ADMIN,
+
+  IFF(m.HQ_CITY_KEY IS NULL, 'unmatched', 'matched') AS GEO_MATCH_STATUS,
+  CURRENT_TIMESTAMP() AS GEO_LABELED_AT
+FROM SILVER.DRM_COMPANY_SILVER c
+LEFT JOIN REF.CITY_REGION_MAPPING_NORM m
+  ON UTIL.CLEAN_CITY_KEY(c.HQ_CITY) = m.HQ_CITY_KEY;

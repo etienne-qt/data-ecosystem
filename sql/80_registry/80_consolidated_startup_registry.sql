@@ -47,6 +47,22 @@ SELECT
     COUNT(*) AS REF_WHITELIST_COUNT
 FROM DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST;
 
+-- Diagnostic: classification rating of each whitelisted DR row.
+-- If any show DRM_RATING = 'D' or NULL, they'll be invisible to
+-- the A+/A/B/C filter in _QT_CANDIDATES and the whitelist won't
+-- flow through. Investigate if that happens.
+SELECT
+    wl.DEALROOM_ID,
+    wl.RC_COMPANY_ID,
+    cls.RATING_LETTER AS DRM_RATING,
+    drm.NAME          AS DRM_NAME
+FROM DEV_QUEBECTECH.REF.V_MATCH_WHITELIST wl
+LEFT JOIN DEV_QUEBECTECH.SILVER.DRM_COMPANY_SILVER drm
+  ON drm.DEALROOM_ID::VARCHAR = wl.DEALROOM_ID
+LEFT JOIN DEV_QUEBECTECH.SILVER.DRM_STARTUP_CLASSIFICATION_SILVER cls
+  ON cls.DEALROOM_ID = drm.DEALROOM_ID
+ORDER BY cls.RATING_LETTER NULLS LAST;
+
 
 /* ============================================================
    PART A1: QT CANDIDATES (pre-effective-rating)
@@ -143,8 +159,19 @@ JOIN DEV_QUEBECTECH.SILVER.DRM_STARTUP_CLASSIFICATION_SILVER cls
   ON drm.DEALROOM_ID = cls.DEALROOM_ID
  AND cls.RATING_LETTER IN ('A+', 'A', 'B', 'C')
 
--- 63D match presence (for C-promotion + downstream)
-LEFT JOIN DEV_QUEBECTECH.UTIL.T_DRM_RC_MATCH_EDGES_DEDUP mb
+-- 63D match presence (for C-promotion + downstream).
+-- LEFT JOIN against the UNIONed match source so that manually
+-- whitelisted pairs also flip HAS_RC_MATCH_AT_CANDIDATE_STAGE,
+-- which lets C-rated DR rows get promoted to B via a whitelist
+-- decision even if 63D missed them.
+LEFT JOIN (
+    SELECT DRM_ID, RC_ID
+    FROM DEV_QUEBECTECH.UTIL.T_DRM_RC_MATCH_EDGES_DEDUP
+    UNION
+    SELECT DEALROOM_ID AS DRM_ID, RC_COMPANY_ID AS RC_ID
+    FROM DEV_QUEBECTECH.REF.V_MATCH_WHITELIST
+    WHERE DEALROOM_ID IS NOT NULL AND RC_COMPANY_ID IS NOT NULL
+) mb
   ON mb.DRM_ID = drm.DEALROOM_ID::VARCHAR
 
 -- Geography
@@ -675,7 +702,13 @@ SELECT
 
 FROM _RC_UNIVERSE rc
 WHERE rc.RC_COMPANY_ID NOT IN (
+    -- Exclude RC rows matched either by 63D OR the manual whitelist.
+    -- Without the UNION here, whitelisted RC rows would appear
+    -- twice in the final registry (once as MATCHED, once as RC_ONLY).
     SELECT RC_ID FROM DEV_QUEBECTECH.UTIL.T_DRM_RC_MATCH_EDGES_DEDUP
+    UNION
+    SELECT RC_COMPANY_ID FROM DEV_QUEBECTECH.REF.V_MATCH_WHITELIST
+    WHERE DEALROOM_ID IS NOT NULL AND RC_COMPANY_ID IS NOT NULL
 )
   AND NOT COALESCE(rc.RC_IS_STARTUP_BLACKLISTED, FALSE)
 ;

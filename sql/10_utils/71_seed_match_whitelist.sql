@@ -58,9 +58,21 @@ VALUES
      'agent', 'q4_domain_near_miss_20260414', NULL)
 ;
 
--- Verify
+-- Verify via the underlying current-decisions view, which exposes
+-- all fields (V_MATCH_WHITELIST only projects id/reviewer columns).
 SELECT
-    DEALROOM_ID, RC_COMPANY_ID, DECISION_TYPE, DECISION_VALUE, DECISION_NOTE
-FROM DEV_QUEBECTECH.REF.V_MATCH_WHITELIST
-WHERE REVIEWED_BY = 'agent'
+    DEALROOM_ID,
+    RC_COMPANY_ID,
+    DECISION_TYPE,
+    DECISION_VALUE,
+    DECISION_NOTE,
+    REVIEW_BATCH,
+    REVIEWED_AT
+FROM DEV_QUEBECTECH.REF.V_MANUAL_REVIEW_CURRENT
+WHERE DECISION_TYPE = 'MATCH_CONFIRM'
+  AND REVIEW_BATCH = 'q4_domain_near_miss_20260414'
 ORDER BY REVIEWED_AT DESC;
+
+-- Also confirm the whitelist view now surfaces these 8 pairs
+SELECT COUNT(*) AS N_MATCH_WHITELIST
+FROM DEV_QUEBECTECH.REF.V_MATCH_WHITELIST;
