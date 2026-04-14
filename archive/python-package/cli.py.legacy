@@ -1,0 +1,298 @@
+"""Main CLI entrypoint for the ecosystem platform."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import click
+from rich.console import Console
+from rich.table import Table
+
+console = Console()
+
+
+@click.group()
+def cli() -> None:
+    """Startup Ecosystem Intelligence Platform."""
+
+
+@cli.command()
+@click.argument("task_name")
+def run_agent(task_name: str) -> None:
+    """Manually trigger an agent task."""
+    from ecosystem.agents.runner import AgentRunner, get_registered_tasks
+
+    runner = AgentRunner()
+    available = get_registered_tasks()
+
+    if task_name == "list":
+        console.print("[bold]Available tasks:[/bold]")
+        for name in available:
+            last = runner.get_last_run(name)
+            status_str = f"[dim](last: {last.status.value} at {last.started_at:%Y-%m-%d %H:%M})[/dim]" if last else "[dim](never run)[/dim]"
+            console.print(f"  - {name} {status_str}")
+        return
+
+    console.print(f"[bold]Running agent task:[/bold] {task_name}")
+    result = runner.run_task(task_name)
+
+    if result.status.value == "success":
+        console.print(f"[green]Success:[/green] {result.message} ({result.duration_seconds:.1f}s)")
+    else:
+        console.print(f"[red]Failed:[/red] {result.error}")
+
+
+@cli.command()
+@click.argument("file_path", type=click.Path(exists=True))
+@click.option("--category", default="reports", help="Knowledge base category (reports, internal, meeting_notes)")
+@click.option("--title", default=None, help="Document title (defaults to filename)")
+def ingest(file_path: str, category: str, title: str | None) -> None:
+    """Ingest a document (markdown, text, or PDF) into the knowledge base."""
+    from ecosystem.knowledge.search import KnowledgeSearch
+    from ecosystem.knowledge.store import DocumentStore
+
+    path = Path(file_path)
+    doc_title = title or path.stem.replace("_", " ").replace("-", " ").title()
+
+    # Read the file
+    if path.suffix == ".pdf":
+        console.print("[yellow]PDF extraction requires manual conversion for now.[/yellow]")
+        console.print("Convert to markdown/text first, then re-run.")
+        return
+    else:
+        content = path.read_text(encoding="utf-8")
+
+    # Determine target path
+    target_name = path.stem + ".md"
+    target_path = f"{category}/{target_name}"
+
+    store = DocumentStore()
+    search = KnowledgeSearch(store=store)
+
+    if store.exists(target_path):
+        store.update(target_path, content=content, metadata_updates={"title": doc_title})
+        console.print(f"[green]Updated:[/green] {target_path}")
+    else:
+        store.create(target_path, content=content, title=doc_title)
+        console.print(f"[green]Created:[/green] {target_path}")
+
+    # Index for search
+    chunks = search.index_document(target_path)
+    console.print(f"[green]Indexed:[/green] {chunks} chunks")
+
+
+@cli.command()
+@click.argument("query")
+@click.option("--top-k", default=5, help="Number of results")
+@click.option("--category", default=None, help="Filter by category")
+def search(query: str, top_k: int, category: str | None) -> None:
+    """Search the knowledge base."""
+    from ecosystem.knowledge.search import KnowledgeSearch
+
+    ks = KnowledgeSearch()
+    results = ks.search(query, top_k=top_k, category=category)
+
+    if not results:
+        console.print("[yellow]No results found.[/yellow]")
+        return
+
+    table = Table(title=f"Search: {query}")
+    table.add_column("Score", style="cyan", width=8)
+    table.add_column("Document", style="green")
+    table.add_column("Snippet", style="white", max_width=60)
+
+    for hit in results:
+        snippet = hit.chunk_text[:120].replace("\n", " ") + "..."
+        table.add_row(f"{hit.score:.3f}", f"{hit.title}\n[dim]{hit.doc_path}[/dim]", snippet)
+
+    console.print(table)
+
+
+@cli.command()
+def reindex() -> None:
+    """Reindex all knowledge base documents."""
+    from ecosystem.knowledge.search import KnowledgeSearch
+
+    ks = KnowledgeSearch()
+    total = ks.reindex_all()
+    console.print(f"[green]Reindexed:[/green] {total} chunks")
+
+
+@cli.command()
+def status() -> None:
+    """Show pipeline status and knowledge base summary."""
+    from ecosystem.knowledge.store import DocumentStore
+
+    store = DocumentStore()
+
+    table = Table(title="Knowledge Base")
+    table.add_column("Category", style="cyan")
+    table.add_column("Documents", style="green", justify="right")
+
+    for category in ["reports", "internal", "meeting_notes", "narratives"]:
+        docs = store.list_documents(category=category)
+        table.add_row(category, str(len(docs)))
+
+    console.print(table)
+
+    # Agent task status
+    from ecosystem.agents.runner import AgentRunner, get_registered_tasks
+
+    runner = AgentRunner()
+    tasks = get_registered_tasks()
+    if tasks:
+        console.print()
+        task_table = Table(title="Agent Tasks")
+        task_table.add_column("Task", style="cyan")
+        task_table.add_column("Last Run", style="green")
+        task_table.add_column("Status", style="white")
+
+        for name in tasks:
+            last = runner.get_last_run(name)
+            if last:
+                status_style = "green" if last.status.value == "success" else "red"
+                task_table.add_row(
+                    name,
+                    last.started_at.strftime("%Y-%m-%d %H:%M"),
+                    f"[{status_style}]{last.status.value}[/{status_style}]",
+                )
+            else:
+                task_table.add_row(name, "[dim]never[/dim]", "[dim]—[/dim]")
+
+        console.print(task_table)
+
+
+@cli.command()
+@click.option("--install", is_flag=True, help="Install plists to ~/Library/LaunchAgents")
+@click.option("--uninstall", is_flag=True, help="Uninstall all ecosystem plists")
+@click.option("--recover", is_flag=True, help="Check and recover missed runs")
+def schedule(install: bool, uninstall: bool, recover: bool) -> None:
+    """Manage scheduled agent tasks (launchd)."""
+    from ecosystem.agents.scheduler import Scheduler
+
+    scheduler = Scheduler()
+
+    if uninstall:
+        count = scheduler.uninstall_all()
+        console.print(f"[green]Uninstalled {count} plists[/green]")
+        return
+
+    if recover:
+        missed = scheduler.check_missed_runs()
+        if not missed:
+            console.print("[green]No missed runs[/green]")
+        else:
+            console.print(f"[yellow]Missed runs:[/yellow] {', '.join(missed)}")
+            recovered = scheduler.recover_missed_runs()
+            console.print(f"[green]Recovered:[/green] {', '.join(recovered)}")
+        return
+
+    # Default: generate plists (and optionally install)
+    paths = scheduler.generate_all()
+    for p in paths:
+        console.print(f"[green]Generated:[/green] {p}")
+
+    if install:
+        count = scheduler.install_all()
+        console.print(f"[green]Installed {count} plists to ~/Library/LaunchAgents[/green]")
+    else:
+        console.print("[dim]Use --install to load into launchd[/dim]")
+
+
+@cli.command("run-pipeline")
+@click.option("--upload", is_flag=True, help="Upload gold output to Snowflake")
+@click.option("--steps", default=None, help="Comma-separated steps to run (bronze,silver,gold)")
+@click.option("--data-dir", type=click.Path(exists=True), default="data", help="Input data directory")
+@click.option("--output-dir", type=click.Path(), default="data/05_pipeline_output", help="Output directory for parquet files")
+def run_pipeline(upload: bool, steps: str | None, data_dir: str, output_dir: str) -> None:
+    """Run the Dealroom data pipeline (bronze → silver → gold)."""
+    import logging
+
+    from ecosystem.pipeline.runner import run_pipeline as _run_pipeline
+
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+
+    step_list = [s.strip() for s in steps.split(",")] if steps else None
+
+    console.print("[bold]Running Dealroom data pipeline[/bold]")
+    if step_list:
+        console.print(f"Steps: {', '.join(step_list)}")
+
+    try:
+        outputs = _run_pipeline(
+            data_dir=Path(data_dir),
+            output_dir=Path(output_dir),
+            upload_to_snowflake=upload,
+            steps=step_list,
+        )
+        for step, path in outputs.items():
+            console.print(f"[green]{step}:[/green] {path}")
+        console.print("[bold green]Pipeline complete![/bold green]")
+    except Exception as e:
+        console.print(f"[red]Pipeline failed:[/red] {e}")
+        raise
+
+
+@cli.command()
+def google_auth() -> None:
+    """Authorize Google APIs (Docs, Drive, Gmail, Calendar) via OAuth2.
+
+    Opens a browser for Google login. Stores the token locally
+    so future runs don't need re-authorization.
+    """
+    from ecosystem.connectors.google_auth import ALL_SCOPES, get_google_credentials
+
+    console.print("[bold]Google OAuth2 Authorization[/bold]")
+    console.print("This will open your browser to authorize access to:")
+    console.print("  - Google Docs & Drive (reading documents)")
+    console.print("  - Gmail (reading emails)")
+    console.print("  - Google Calendar (reading events)")
+    console.print()
+
+    try:
+        creds = get_google_credentials(scopes=ALL_SCOPES, interactive=True)
+        console.print(f"[green]Success![/green] Credentials stored and valid.")
+        console.print(f"[dim]Token expires: {creds.expiry}[/dim]")
+    except FileNotFoundError as e:
+        console.print(f"[red]Error:[/red] {e}")
+    except Exception as e:
+        console.print(f"[red]Failed:[/red] {e}")
+
+
+@cli.command()
+def asana_auth() -> None:
+    """Authorize Asana via OAuth2.
+
+    Opens a browser for Asana login. Stores the token locally
+    so future runs don't need re-authorization.
+    """
+    from ecosystem.connectors.asana_auth import get_asana_access_token
+
+    console.print("[bold]Asana OAuth2 Authorization[/bold]")
+    console.print("This will open your browser to authorize access to Asana.")
+    console.print()
+
+    try:
+        token = get_asana_access_token(interactive=True)
+        console.print("[green]Success![/green] Asana credentials stored and valid.")
+        # Fetch user info to confirm
+        try:
+            from ecosystem.connectors.asana import AsanaClient
+            client = AsanaClient(access_token=token)
+            me = client._client.users.me()
+            console.print(f"[dim]Authenticated as: {me.get('name', 'unknown')} ({me.get('email', '')})[/dim]")
+
+            # Show workspaces
+            workspaces = me.get("workspaces", [])
+            if workspaces:
+                console.print("[dim]Workspaces:[/dim]")
+                for ws in workspaces:
+                    console.print(f"  [dim]{ws.get('name', '')} (GID: {ws.get('gid', '')})[/dim]")
+        except Exception:
+            pass  # Token works, just couldn't fetch user info
+    except Exception as e:
+        console.print(f"[red]Failed:[/red] {e}")
+
+
+if __name__ == "__main__":
+    cli()

@@ -1,0 +1,64 @@
+[project]
+name = "ecosystem"
+version = "0.1.0"
+description = "Startup Ecosystem Intelligence Platform — data pipeline, knowledge base, and agent system for Quebec startup ecosystem analysis"
+requires-python = ">=3.11"
+dependencies = [
+    # Data & connectors
+    "snowflake-connector-python>=3.6",
+    "cryptography>=42.0",
+    "hubspot-api-client>=9.0",
+    "asana>=5.0",
+    "google-api-python-client>=2.100",
+    "google-auth>=2.25",
+    "google-auth-oauthlib>=1.2",
+    # Data processing
+    "pandas>=2.1",
+    "httpx>=0.27",
+    "beautifulsoup4>=4.12",
+    "trafilatura>=1.9",
+    # Knowledge base
+    "chromadb>=0.4",
+    # Config & validation
+    "pyyaml>=6.0",
+    "pydantic>=2.6",
+    "pydantic-settings>=2.1",
+    "python-dotenv>=1.0",
+    # CLI & output
+    "click>=8.1",
+    "rich>=13.7",
+    # Utilities
+    "tenacity>=8.2",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+]
+llm = [
+    "openai>=1.10",
+]
+
+[project.scripts]
+eco = "ecosystem.cli:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ecosystem"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

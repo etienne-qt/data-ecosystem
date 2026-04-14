@@ -1,0 +1,162 @@
+# Startup Ecosystem Intelligence Platform
+
+## Project Overview
+Data platform for collecting, analyzing, and reporting on Quebec's startup ecosystem. Manages 20+ data partnerships and maintains a pipeline across HubSpot, Dealroom, Pitchbook, Quebec Registry, Harmonic, LinkedIn, and Snowflake.
+
+**Owner**: Etienne Bernard — mandate is to collect/analyze ecosystem data, produce reports for decision-makers, and manage data partnerships.
+
+## Quick Start
+```bash
+# Activate virtualenv
+source .venv/bin/activate
+
+# Run tests
+python -m pytest tests/ -v
+
+# CLI entrypoint
+eco --help
+eco status                     # Show KB summary + agent task status
+eco run-agent list             # List available agent tasks
+eco run-agent nightly_sync     # Manually trigger a task
+eco search "AI startups"       # Semantic search over knowledge base
+eco ingest report.md           # Add a document to the KB
+eco reindex                    # Rebuild search index
+eco schedule --install         # Generate + install launchd plists
+```
+
+## Architecture
+```
+startup-ecosystem/
+├── src/ecosystem/             # Python package (import as `ecosystem`)
+│   ├── config.py              # Pydantic settings singleton (loads .env)
+│   ├── connectors/            # External API clients
+│   │   ├── snowflake.py       # SnowflakeClient — query(), execute(), upload_df()
+│   │   ├── hubspot.py         # HubSpotClient — get_all_companies(), batch_update()
+│   │   ├── asana.py           # AsanaClient — get_tasks(), create/complete/comment
+│   │   └── google_docs.py     # GoogleDocsClient — get_document_text(), list_files()
+│   ├── ingestion/             # Data loaders
+│   │   ├── dealroom_loader.py # load_dealroom_file() — CSV/Excel → DataFrame/Snowflake
+│   │   ├── hubspot_sync.py    # pull_hubspot_to_snowflake(), push_enrichments_to_hubspot()
+│   │   └── registry_loader.py # Stub — Quebec business registry
+│   ├── processing/            # Data transformation & enrichment
+│   │   ├── classifier.py      # rate_company() / rate_companies() — A+/A/B/C/D rating
+│   │   ├── matcher.py         # match_datasets() — cross-source entity matching
+│   │   ├── website_checker.py # WebsiteChecker — fetch, crawl, extract text
+│   │   └── enrichment.py      # Stub — industry/geo/lifecycle enrichment
+│   ├── agents/                # Autonomous task system
+│   │   ├── runner.py          # AgentRunner, @register_task, TaskResult, TaskStatus
+│   │   ├── scheduler.py       # Scheduler — launchd plist gen, install, recovery
+│   │   └── tasks/             # Individual task handlers
+│   │       ├── nightly_sync.py    # HubSpot → Snowflake sync
+│   │       ├── classify_new.py    # Classify unrated companies
+│   │       ├── match_resolve.py   # Entity matching (HubSpot ↔ Dealroom)
+│   │       ├── report_gen.py      # Generate metrics reports
+│   │       └── notes_ingest.py    # Google Docs → knowledge base
+│   ├── knowledge/             # Knowledge base engine
+│   │   ├── store.py           # DocumentStore — CRUD for markdown with YAML frontmatter
+│   │   ├── index.py           # KnowledgeIndex — ChromaDB or TF-IDF fallback
+│   │   ├── search.py          # KnowledgeSearch — semantic search with metadata
+│   │   └── narrative.py       # NarrativeManager — living document sections
+│   └── cli.py                 # Click CLI (eco command)
+│
+├── sql/                       # Snowflake SQL pipeline (medallion architecture)
+│   ├── 10_utils/              # Helper procedures
+│   ├── 20_bronze/             # Raw data ingestion
+│   ├── 30_silver/             # Cleaned/normalized tables
+│   ├── 40_dealroom/           # Dealroom-specific transforms
+│   ├── 50_analytics/          # Aggregations and metrics
+│   ├── 60_matching/           # Cross-source matching SQL
+│   └── ...
+│
+├── knowledge_base/            # Markdown knowledge base (git-tracked)
+│   ├── reports/               # External reports
+│   ├── internal/              # Internal analyses
+│   ├── meeting_notes/         # Ingested meeting notes
+│   ├── narratives/            # Living narrative documents
+│   └── index.md               # Master index
+│
+├── agents/launchd/            # Generated launchd plist files
+├── scripts/                   # Thin CLI wrappers
+├── tests/                     # pytest test suite (80+ tests)
+└── logs/                      # Agent run logs (JSONL)
+```
+
+## Key Conventions
+
+### Config
+- All settings via `from ecosystem.config import settings` (singleton)
+- Secrets in `.env` (gitignored), template in `.env.example`
+- Nested settings: `settings.snowflake.account`, `settings.hubspot.access_token`, etc.
+
+### Connectors
+- Each connector wraps one external API, returns typed results
+- All support being instantiated without credentials (will fail on first API call)
+- Pattern: `client = SnowflakeClient()` then `df = client.query("SELECT ...")`
+
+### Knowledge Base
+- Files stored as markdown with YAML frontmatter in `knowledge_base/`
+- `DocumentStore` handles CRUD, path traversal protection
+- `KnowledgeIndex` auto-selects ChromaDB (preferred) or TF-IDF fallback
+- `NarrativeManager` supports section-level append/update on living docs
+
+### Agent Tasks
+- Register with `@register_task("name")` decorator in `agents/tasks/`
+- Must return `TaskResult` with status, message, optional details
+- `AgentRunner` dispatches by name, logs results to JSONL in `logs/`
+- Five default tasks: `nightly_sync`, `classify_new`, `match_resolve`, `report_gen`, `notes_ingest`
+
+### Classifier
+- Rule-based A+/A/B/C/D startup rating using keyword lists and feature flags
+- `ClassifierConfig` dataclass for tunable thresholds (deal_amount, employee count, etc.)
+- `rate_companies(df)` → DataFrame with rating columns added
+
+### Matcher
+- Cross-source entity matching on normalized name, website, LinkedIn, register number
+- `match_datasets(hubspot_df, dealroom_df)` → tuple of DataFrames with match flags
+
+## CLI Commands
+| Command | Description |
+|---------|-------------|
+| `eco run-agent <name>` | Run a specific agent task |
+| `eco run-agent list` | List all registered tasks with last run status |
+| `eco ingest <file> [--category] [--title]` | Ingest a document into the knowledge base |
+| `eco search <query> [--top-k] [--category]` | Semantic search over knowledge base |
+| `eco reindex` | Rebuild the entire search index |
+| `eco status` | Show KB document counts + agent task status |
+| `eco schedule [--install] [--uninstall] [--recover]` | Manage launchd scheduled tasks |
+
+## Testing
+```bash
+python -m pytest tests/ -v          # All tests
+python -m pytest tests/ -k runner   # Just runner tests
+python -m pytest tests/ --cov=ecosystem  # With coverage
+```
+
+Tests use `tmp_path` fixtures to avoid side effects. The `_clean_registry` fixture in `test_runner.py` saves/restores the task registry around each test.
+
+## Scheduling (macOS launchd)
+Default schedules defined in `agents/scheduler.py`:
+| Task | Schedule |
+|------|----------|
+| `nightly_sync` | Daily at 02:00 |
+| `classify_new` | Daily at 03:00 |
+| `match_resolve` | Daily at 03:30 |
+| `report_gen` | Monday at 06:00 |
+| `notes_ingest` | Daily at 07:00 |
+
+Plists are generated in `agents/launchd/`, symlinked to `~/Library/LaunchAgents/` on install. Missed-run recovery checks log timestamps and re-runs overdue tasks.
+
+## Data Sources
+| Source | Connector | Direction | Key Tables |
+|--------|-----------|-----------|------------|
+| Snowflake | `connectors.snowflake` | R/W | DRM_COMPANY_SILVER, HUBSPOT_COMPANIES |
+| HubSpot | `connectors.hubspot` | R/W | Companies, Contacts, Deals |
+| Asana | `connectors.asana` | R/W | Agent task tracking |
+| Google Docs | `connectors.google_docs` | Read | Meeting notes folder |
+| Dealroom | `ingestion.dealroom_loader` | CSV import | Company data exports |
+
+## Environment Notes
+- Python >=3.11 (currently 3.14 via homebrew)
+- ChromaDB has a pydantic v1 compatibility issue on Python 3.14 — the knowledge base auto-falls back to a TF-IDF index
+- No `uv` installed — use `python3 -m venv .venv` + `pip install -e ".[dev]"`
+- macOS (Darwin), scheduling via launchd (not cron)
