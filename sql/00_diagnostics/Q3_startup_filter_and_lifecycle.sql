@@ -93,11 +93,37 @@ WITH unified AS (
             WHEN r.ENTITY_TYPE = 'RC_ONLY'
                 THEN 'operational'  -- Harmonic tracking = alive signal
             ELSE NULL
-        END                                           AS UNIFIED_STATUS
+        END                                           AS UNIFIED_STATUS,
+
+        -- Policy E non-tech name veto, applied to ALL sides.
+        -- DR-side rows already carry FLAG_NON_TECH_NAME_HIT from
+        -- the 80 script. For RC_ONLY we compute it inline against
+        -- RC_NAME using an expanded keyword list informed by Q4
+        -- eyeball results (Apr 14). Snowflake RLIKE is POSIX
+        -- without lookaheads — keywords kept simple on purpose.
+        CASE
+            WHEN COALESCE(r.FLAG_NON_TECH_NAME_HIT, FALSE)
+                THEN TRUE
+            WHEN r.ENTITY_TYPE = 'RC_ONLY'
+                 AND LOWER(r.RC_NAME) RLIKE
+                     '.*(consulting|consultant|agency|' ||
+                     'r[ée]novation|construction|' ||
+                     'd[ée]m[ée]nagement|immobilier|enseigne|' ||
+                     'cabinet|conseil|' ||
+                     -- expansions from Q4 2026-04-14 sample
+                     'funds|insurance|assurance|benefits|' ||
+                     'restaurant|caf[ée]|grill|cuisine|resto|bistro|' ||
+                     'yogourt|yogurt|buanderie|laundry|' ||
+                     'juris|avocat|notaire|' ||
+                     'dermo|dermato|esth[ée]tique|cosmetic|cosm[ée]tique|' ||
+                     'clinique|chiro|dentiste|dental|optom[ée]trie|' ||
+                     'galerie|shopping|boutique).*'
+                THEN TRUE
+            ELSE FALSE
+        END                                           AS UNIFIED_NON_TECH_NAME_HIT
     FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
     WHERE r.ENTITY_TYPE IN ('MATCHED', 'QT_ONLY', 'RC_ONLY')
       AND NOT COALESCE(r.IS_STARTUP_BLACKLISTED, FALSE)
-      AND NOT COALESCE(r.FLAG_NON_TECH_NAME_HIT, FALSE)
 )
 SELECT
     u.*,
@@ -112,8 +138,9 @@ SELECT
         ELSE                                                     'unknown_status'
     END                                                    AS LIFECYCLE_BUCKET
 FROM unified u
-WHERE u.UNIFIED_LAUNCH_YEAR IS NULL
-   OR u.UNIFIED_LAUNCH_YEAR > 1990
+WHERE NOT u.UNIFIED_NON_TECH_NAME_HIT
+  AND (u.UNIFIED_LAUNCH_YEAR IS NULL
+       OR u.UNIFIED_LAUNCH_YEAR > 1990)
 ;
 
 
