@@ -1,0 +1,127 @@
+# Quebec Ecosystem Data — Sector Taxonomy
+# Canonical sector codes for classifying startups and companies.
+# Changes to this file require a taxonomy/ branch and cross-org PR review.
+#
+# Structure:
+#   code: Unique short code (used in queries, insights, filters)
+#   label_en / label_fr: Display names
+#   parent: Parent sector code (null for top-level)
+#   description: What this sector covers
+#   includes: Positive examples for classification
+#   excludes: What does NOT belong here
+
+sectors:
+
+  # --- Top-level sectors ---
+
+  - code: ICT
+    label_en: "Information and communications technology"
+    label_fr: "Technologies de l'information et des communications"
+    parent: null
+    description: "Broad ICT sector including software, hardware, telecom, and digital services"
+    includes:
+      - "Software-as-a-service (SaaS)"
+      - "Enterprise software"
+      - "Cloud infrastructure"
+      - "Cybersecurity"
+      - "Fintech"
+      - "Digital media and entertainment"
+    excludes:
+      - "Hardware-only companies with no software/digital component"
+
+  - code: AI
+    label_en: "Artificial intelligence"
+    label_fr: "Intelligence artificielle"
+    parent: ICT
+    description: "Companies whose core product or service relies on AI/ML technology"
+    includes:
+      - "Machine learning platforms"
+      - "Natural language processing / LLM applications"
+      - "Computer vision"
+      - "AI infrastructure and MLOps"
+      - "Conversational AI and chatbots"
+      - "AI-driven analytics"
+    excludes:
+      - "Companies that use AI as a feature but whose primary value proposition is in another sector (classify by primary product)"
+
+  - code: HEALTHTECH
+    label_en: "Health technology"
+    label_fr: "Technologies de la santé"
+    parent: null
+    description: "Technology applied to healthcare, life sciences, and wellness"
+    includes:
+      - "Digital health platforms"
+      - "Medical devices with software component"
+      - "Biotech with technology platform"
+      - "Health data and analytics"
+      - "Telemedicine"
+    excludes:
+      - "Pure pharmaceutical companies without a tech platform"
+      - "Traditional medical device manufacturing"
+
+  - code: CLEANTECH
+    label_en: "Clean technology"
+    label_fr: "Technologies propres"
+    parent: null
+    description: "Technology addressing environmental and energy challenges"
+    includes:
+      - "Renewable energy technology"
+      - "Energy storage and batteries"
+      - "Carbon capture and removal"
+      - "Sustainable materials"
+      - "Smart grid and energy management"
+      - "Electric mobility technology"
+      - "Water treatment technology"
+    excludes:
+      - "Companies that are 'green' in operations but whose product is not cleantech"
+
+  - code: DEEPTECH
+    label_en: "Deep technology"
+    label_fr: "Technologies de rupture"
+    parent: null
+    description: "Companies built on substantial scientific or engineering advances"
+    includes:
+      - "Quantum computing"
+      - "Advanced materials"
+      - "Photonics and optics"
+      - "Robotics and autonomous systems"
+      - "Semiconductor design"
+      - "Space technology"
+    excludes:
+      - "Software companies using standard technology stacks"
+      - "AI companies (classify under AI unless the core innovation is hardware)"
+
+  - code: FINTECH
+    label_en: "Financial technology"
+    label_fr: "Technologies financières"
+    parent: ICT
+    description: "Technology applied to financial services"
+    includes:
+      - "Payment processing"
+      - "Banking infrastructure"
+      - "Insurance technology"
+      - "Wealth management platforms"
+      - "Blockchain and digital assets"
+    excludes:
+      - "Traditional financial services firms"
+
+  - code: AGRITECH
+    label_en: "Agricultural technology"
+    label_fr: "Technologies agricoles"
+    parent: null
+    description: "Technology applied to agriculture and food production"
+    includes:
+      - "Precision agriculture"
+      - "AgBio and crop science technology"
+      - "Food processing technology"
+      - "Supply chain and traceability"
+    excludes:
+      - "Traditional farming operations"
+      - "Food retail and delivery (classify under ICT or relevant sector)"
+
+  # --- Add new sectors via taxonomy/ branches ---
+  # To propose a new sector:
+  # 1. Create branch: git checkout -b taxonomy/add-{sector-name}
+  # 2. Add the entry following the structure above
+  # 3. Run validation: python pipelines/validation/validate_taxonomy.py
+  # 4. Open PR — requires approval from QT, RC, and CIQ

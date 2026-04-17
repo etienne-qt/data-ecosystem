@@ -1,0 +1,15 @@
+# Quebec Ecosystem Data — Insights Index
+# This file is the master registry of all extracted insights.
+# Claude Code reads this to search across the full knowledge base.
+# Update this file whenever new insights are committed.
+
+insights: []
+  # Example entry:
+  # - id: "2026-q2-vc-001"
+  #   file: "2026-q2/vc-overview.md"
+  #   title: "Q2 2026 Quebec VC overview"
+  #   topics: [funding, quebec-vc]
+  #   geography: quebec
+  #   period: "2024"
+  #   date_extracted: 2026-04-17
+  #   source_type: licensed

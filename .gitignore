@@ -11,13 +11,23 @@ build/
 .venv/
 .ruff_cache/
 
-# Local data + logs + notebooks — never publish
-data/
+# Local data — never publish. Contains raw exports, session logs,
+# messages, meeting notes, downloaded report PDFs, and any record-level
+# licensed data pulled from Snowflake. The README explaining this
+# directory is tracked so new contributors can see the conventions.
+data/*
+!data/README.md
 logs/
 notebooks/
-knowledge_base/**/*.chromadb/
 
-# Spreadsheet exports
+# Local-only QT operational content (archived legacy code).
+# Removed from git tracking, kept on disk for reference.
+archive/
+
+# Third-party sandbox (Google Apps Script project, separate scope).
+GoogleAppScripts/
+
+# Spreadsheet exports (commit public CSVs only via public-data/).
 *.csv
 *.xlsx
 *.xls

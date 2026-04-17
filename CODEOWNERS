@@ -1,0 +1,21 @@
+# CODEOWNERS — Quebec Ecosystem Data
+#
+# This file defines review requirements for protected paths. GitHub will
+# automatically request review from the listed owners whenever a pull
+# request touches matching files.
+#
+# The team handles referenced below do not exist yet; they will be wired
+# up once the repo is opened to Réseau Capital and CIQ collaborators. In
+# the meantime, single-owner review via @etienne-qt is sufficient.
+
+# Default: any contributor can review
+*                       @etienne-qt
+
+# Taxonomy changes require cross-org review once the teams are created.
+# /taxonomy/            @quebec-ecosystem-data/taxonomy-reviewers
+/taxonomy/              @etienne-qt
+
+# Governance and top-level docs follow the same cross-org rule.
+# DATA-GOVERNANCE.md    @quebec-ecosystem-data/taxonomy-reviewers
+/DATA-GOVERNANCE.md     @etienne-qt
+/CLAUDE.md              @etienne-qt

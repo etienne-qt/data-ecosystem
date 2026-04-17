@@ -1,0 +1,83 @@
+# Quebec Ecosystem Data — Funding Stage Taxonomy
+# Canonical definitions for funding stages.
+# Changes require a taxonomy/ branch and cross-org PR review.
+
+stages:
+
+  - code: PRE_SEED
+    label_en: "Pre-seed"
+    label_fr: "Pré-amorçage"
+    order: 1
+    description: "Earliest institutional or angel funding, typically before product-market fit"
+    criteria:
+      typical_round_size_cad: "< $1M"
+      typical_revenue: "Pre-revenue or < $100K ARR"
+      typical_employees: "1-5"
+    common_investors:
+      - "Angel investors"
+      - "Accelerator programs"
+      - "Friends and family (formalized)"
+      - "Micro-VCs"
+
+  - code: SEED
+    label_en: "Seed"
+    label_fr: "Amorçage"
+    order: 2
+    description: "First significant institutional round, building toward product-market fit"
+    criteria:
+      typical_round_size_cad: "$1M - $5M"
+      typical_revenue: "< $1M ARR"
+      typical_employees: "5-20"
+    common_investors:
+      - "Seed-stage VCs"
+      - "Angel syndicates"
+      - "Accelerator follow-on"
+
+  - code: SERIES_A
+    label_en: "Series A"
+    label_fr: "Série A"
+    order: 3
+    description: "First major VC round, scaling a proven product"
+    criteria:
+      typical_round_size_cad: "$5M - $20M"
+      typical_revenue: "$1M - $5M ARR"
+      typical_employees: "20-50"
+
+  - code: SERIES_B
+    label_en: "Series B"
+    label_fr: "Série B"
+    order: 4
+    description: "Growth-stage financing for scaling operations and market expansion"
+    criteria:
+      typical_round_size_cad: "$20M - $75M"
+      typical_revenue: "$5M - $25M ARR"
+      typical_employees: "50-200"
+
+  - code: SERIES_C_PLUS
+    label_en: "Series C+"
+    label_fr: "Série C+"
+    order: 5
+    description: "Late-stage VC rounds for companies approaching scale or pre-IPO"
+    criteria:
+      typical_round_size_cad: "> $75M"
+      typical_revenue: "> $25M ARR"
+      typical_employees: "> 200"
+
+  - code: GROWTH
+    label_en: "Growth equity"
+    label_fr: "Capital de croissance"
+    order: 6
+    description: "Non-VC growth financing, often from PE firms or strategic investors"
+
+  - code: GRANT
+    label_en: "Grant / non-dilutive"
+    label_fr: "Subvention / non dilutif"
+    order: 0
+    description: "Government grants, tax credits, and non-dilutive funding"
+    notes: "Track separately from equity rounds. A company receiving a grant does not change its equity stage."
+
+# Notes on classification:
+# - When a round doesn't have a series label, classify by round size and company stage
+# - Bridge rounds are classified at the stage they bridge TO
+# - Convertible notes are classified at the stage of the next priced round
+# - When sources disagree on stage classification, use the criteria above as the tiebreaker
