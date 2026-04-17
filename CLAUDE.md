@@ -1,177 +1,181 @@
-# Quebec Tech — Ecosystem Data Platform
+# Quebec Ecosystem Data — Shared Intelligence Repo
 
-**Owner:** Étienne Bernard · **Team:** Data & Analytics
-**Mandate:** collect and analyze data on the Quebec tech startup ecosystem, produce reports for decision-makers, and manage our data partnerships (Dealroom, Réseau Capital / Harmonic + PitchBook, HubSpot, Quebec REQ).
+## What this repo is
 
-This project is the home of:
+This is the shared data collaboration repo for **Quebec Tech**, **Réseau Capital**, and the **Conseil de l'Innovation du Québec (CIQ)**. It contains taxonomy definitions, data pipeline scripts, extracted insights from ecosystem reports, and shared Claude Code skills.
 
-1. **The SQL pipeline** that builds our single source of truth, `GOLD.STARTUP_REGISTRY` in Snowflake
-2. **Diagnostic SQL** (Q0–Q4) we use to investigate the registry and answer ecosystem questions
-3. **The knowledge base** of markdown notes, external reports, and living narratives we draw on for the annual portrait and recommendation reports
-4. **A small Python task** (`website_review`) for classifying companies via their websites — the only automated Python work still running
+**This repo does not contain raw data.** All record-level and licensed data lives in Snowflake or on local machines. Only aggregate analytics, publicly available data, code, and documentation are committed here. See `DATA-GOVERNANCE.md` for the full policy.
 
----
-
-## How we actually work (2026-04 snapshot)
-
-The real work happens in two places:
-
-1. **Snowflake** — all pipeline tables, classification, matching, and the final registry live here. Work flows as:
-   `Raw sources → BRONZE → SILVER → T_ENTITIES → matching → GOLD.STARTUP_REGISTRY`
-2. **Markdown + Q-diagnostics** — we pose a question, write a focused SQL diagnostic in `sql/00_diagnostics/` (`Qn_*.sql`), run it in Snowsight, save the CSVs, and analyze. Insights land in `knowledge_base/` or `docs/`.
-
-The Python package in `src/ecosystem/` is **intentionally minimal** — only the `website_review` task. Everything else that used to live there (connectors, knowledge-base engine, scheduler, other agent tasks, local Dealroom pipeline) has been moved to `archive/python-package/` because it was never actually run in production. If you need to revive any of it, it's there untouched.
-
----
-
-## Project layout
+## Repo structure
 
 ```
-ecosystem/
-├── sql/                           # THE pipeline — Snowflake SQL, numbered by stage
-│   ├── 00_diagnostics/            # Q0–Q4 investigation scripts + pipeline row counts
-│   ├── 10_utils/                  # UDFs, config tables, manual review infra
-│   ├── 20_bronze/                 # Typed landings from raw imports
-│   ├── 30_silver/                 # Classification, signals, geo, industry, REQ bridge
-│   ├── 40_dealroom/               # Dealroom ↔ REQ NEQ matching
-│   ├── 50_analytics/              # Ad-hoc analyses
-│   ├── 61_clean_staging_views/    # Normalized views per source
-│   ├── 62_unified_entity_table/   # T_ENTITIES (cross-source union)
-│   ├── 63_match_edges/            # DR↔RC and HS↔DR match edges
-│   ├── 64_build_clusters/         # Label-propagation clustering
-│   ├── 65_cluster_conflicts/      # Cluster audit
-│   ├── 66_golden_per_cluster/     # Golden record per cluster
-│   ├── 67_push_list_hubspot/      # HubSpot push-back
-│   ├── 68_push_list_dealroom/     # Dealroom push-back
-│   ├── 69_operational_tables/     # Cluster flags, resolution map
-│   ├── 70_req_discovery/          # REQ discovery queue (deprioritized)
-│   ├── 80_registry/               # Final GOLD.STARTUP_REGISTRY
-│   └── 90_tests/                  # Smoke tests
-│
-├── docs/
-│   ├── pipeline_overview.md       # Stage-by-stage walkthrough with Mermaid diagram,
-│   │                              # row-count waypoints, and the canonical startup
-│   │                              # filter + lifecycle taxonomy. START HERE.
-│   └── methodology_and_statistics.md  # Older methodology notes
-│
-├── knowledge_base/                # Markdown KB — hand-managed
-│   ├── index.md
-│   ├── narratives/                # Living narrative documents
-│   ├── insights/                  # By-topic and by-geography analytical notes
-│   ├── reports/                   # External report summaries (BDC, CVCA, etc.)
-│   └── internal/                  # Internal analyses (data dictionary, taxonomy)
-│
-├── src/ecosystem/                 # Minimal Python for website_review
-│   ├── cli.py                     # `eco run-agent website_review`
-│   ├── config.py                  # pydantic settings (reads .env)
-│   ├── agents/
-│   │   ├── runner.py              # AgentRunner, TaskResult, register_task
-│   │   └── tasks/website_review.py
-│   └── processing/
-│       ├── classifier.py          # keyword/utility functions
-│       ├── website_checker.py     # fetch / crawl / extract
-│       └── website_reviewer.py    # classify startups from website content
-│
-├── scripts/
-│   └── pipeline/run_website_review.py   # the one active entry point
-│
-├── archive/                       # reversible — all the legacy Python + scripts
-│   ├── CLAUDE.md.legacy           # previous CLAUDE.md
-│   ├── python-package/            # connectors, ingestion, knowledge, pipeline,
-│   │                              # scheduler, 5 never-run agent tasks
-│   ├── python-tests/              # pytest suite for the archived code
-│   ├── legacy-scripts/            # enrich_corpo, extract_schema, fix_enrichment,
-│   │                              # run_agent, ingest_report, query_kb,
-│   │                              # run_full_pipeline, upload_to_snowflake
-│   └── legacy-agent-config/       # agents/ top-level (asana_config, launchd/)
-│
-├── pyproject.toml                 # Python package config — only needed to
-│                                  # `pip install -e` so `eco` is callable
-├── .env.example                   # template — copy to .env and fill in
-├── .gitignore
-└── CLAUDE.md                      # this file
+quebec-ecosystem-data/
+├── CLAUDE.md                  ← You are here (root context for Claude Code)
+├── CONTRIBUTING.md            ← Collaboration guide for all partners
+├── DATA-GOVERNANCE.md         ← Data classification and commitment rules
+├── .claude/
+│   └── settings.json          ← Shared Claude Code project settings
+├── skills/                    ← Shared Claude Code skills (loaded every session)
+│   ├── taxonomy-lookup.md
+│   ├── snowflake-query.md
+│   ├── insight-extractor.md
+│   ├── report-builder.md
+│   ├── data-enrichment.md
+│   └── branch-conventions.md
+├── taxonomy/                  ← Canonical definitions (YAML)
+│   ├── sectors.yaml           ← Sector/industry classification
+│   ├── stages.yaml            ← Funding stage definitions
+│   ├── startup-criteria.yaml  ← What qualifies as a startup
+│   ├── geographies.yaml       ← Region/city codes
+│   └── labels.yaml            ← Tags, categories, flags
+├── pipelines/                 ← Shared Python scripts and SQL
+│   ├── enrichment/            ← Data enrichment scripts
+│   ├── transforms/            ← Snowflake transformation logic
+│   ├── validation/            ← Data quality checks
+│   └── utils/                 ← Shared utility functions
+├── insights/                  ← Structured findings from reports
+│   ├── index.yaml             ← Master registry of all insights
+│   └── 2026-q2/              ← Insights organized by period
+│       ├── vc-overview.md
+│       ├── ai-index.md
+│       └── ...
+├── reports/                   ← Published final documents (PDFs)
+│   └── 2026-q2/
+├── public-data/               ← Open-source datasets (ok to commit)
+│   └── README.md              ← Source attribution for each file
+├── docs/                      ← Data dictionary, methodology
+│   ├── data-dictionary.md
+│   ├── methodology.md
+│   └── snowflake-schemas.md
+└── data/                      ← LOCAL ONLY (gitignored)
+    └── README.md              ← Explains what goes here
 ```
 
+## Data governance — critical rules
+
+These rules apply to every commit, every PR, every Claude Code session:
+
+1. **No record-level licensed data in this repo.** Dealroom URLs, PitchBook deal IDs, individual company financials from licensed sources — none of these get committed. They stay in Snowflake or in local `data/`.
+2. **Aggregate numbers only for insights.** Totals, averages, counts, percentages, medians, ranges. Never individual records.
+3. **Public data is fine to commit** if it comes from an open source (StatCan, OECD, REQ, published reports). Attribute the source.
+4. **Code is always committable.** Scripts, SQL, pipeline logic — commit freely. But scripts must reference data paths in the gitignored `data/` directory or Snowflake queries, never embed raw data inline.
+5. **Company names are ok** only when referencing publicly available information (e.g., a company's website, a published funding announcement). Never commit non-public company information sourced from licensed platforms.
+
+See `DATA-GOVERNANCE.md` for the full data source classification table.
+
+## Taxonomy — shared definitions
+
+All sector codes, funding stage labels, startup criteria, and category definitions live in `taxonomy/*.yaml`. These are the canonical reference for all analyses.
+
+When classifying a company or a deal:
+- Always use codes from `taxonomy/sectors.yaml` — never invent ad-hoc categories
+- Funding stages follow the definitions in `taxonomy/stages.yaml`
+- The startup definition criteria in `taxonomy/startup-criteria.yaml` determine what is and isn't counted in ecosystem metrics
+
+Taxonomy changes require a `taxonomy/` branch and a PR approved by at least one representative from each partner org (QT, RC, CIQ).
+
+## Branch conventions
+
+| Prefix | Purpose | Merges to main? | Lifespan |
+|--------|---------|-----------------|----------|
+| `report/{name}` | Structured report production | Yes — insights, scripts, final PDF | Weeks to a quarter |
+| `taxonomy/{change}` | Definition/classification changes | Yes — requires cross-org PR review | Days to weeks |
+| `pipeline/{change}` | New or modified scripts/SQL | Yes — with code review | Days to weeks |
+| `scratch/{org}-{description}` | Ad-hoc queries, exploration | **No** — close or cherry-pick | Days |
+
+### Naming examples
+- `report/q2-2026-vc-overview`
+- `taxonomy/cleantech-sector-rework`
+- `pipeline/enrichment-v2-dealroom`
+- `scratch/rc-seed-deal-breakdown`
+- `scratch/qt-udes-spinoff-count`
+- `scratch/ciq-barometer-cross-ref`
+
+### Commit messages
+Use the format: `[type] short description`
+- `[insight] Add Q2 2026 VC aggregate findings`
+- `[taxonomy] Revise cleantech sub-sector codes`
+- `[pipeline] Add Dealroom enrichment script`
+- `[docs] Update Snowflake schema documentation`
+- `[skill] Improve snowflake-query patterns`
+
+## Snowflake context
+
+The shared Snowflake instance contains tables from all three partner organizations. When writing queries:
+- Use fully qualified table names: `{database}.{schema}.{table}`
+- Reference the shared schema documentation in `docs/snowflake-schemas.md`
+- Use the taxonomy codes from `taxonomy/` for any filtering or grouping — never hardcode category strings
+- When query results are destined for a commit (an insight or a report), aggregate before extracting
+- When exploring locally on a scratch branch, raw queries are fine — they stay local
+
+## Insight format
+
+All insights committed to `insights/` use markdown with YAML frontmatter:
+
+```yaml
+---
+id: "2026-q2-vc-001"
+source: "Réseau Capital Q4 2024 Annual Report"
+source_type: licensed          # licensed | public | derived
+date_extracted: 2026-04-17
+report_branch: "report/q2-2026-vc-overview"
+topics:
+  - funding
+  - seed-stage
+geography: quebec
+period: "2024"
+confidence: high               # high | medium | low
+data_points:
+  - metric: total_vc_invested
+    value: 2000000000
+    unit: CAD
+    period: "2024"
+  - metric: seed_deal_count
+    value: 39
+    period: "2024"
+  - metric: seed_deal_yoy_change
+    value: -0.52
+    unit: ratio
+    period: "2024-vs-2023"
 ---
 
-## The startup registry, in one paragraph
-
-`DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY` is the full outer join of Dealroom (filtered to classifier ratings A+/A/B with C promoted when matched to RC) and Réseau Capital's `COMPANY_MASTER` (Harmonic + PitchBook, Quebec-filtered). Matching is a tiered waterfall: domain → LinkedIn → Crunchbase → name similarity ≥ 0.85, plus a manual whitelist for known near-misses. Each row carries its provenance (`ENTITY_TYPE` = MATCHED / QT_ONLY / RC_ONLY), coverage flags, conflict markers, and an effective rating after promotion/whitelist/blacklist. The current total is **7,607 rows**; after applying our startup filter (pre-1990 cutoff, non-tech name veto, blacklist), **6,507 lines** survive — of which roughly 5,100–5,500 are clearly tech startups by manual audit. See `docs/pipeline_overview.md` for the full waterfall and framing.
-
----
-
-## How to do things
-
-### Investigate an ecosystem question
-
-1. Read `docs/pipeline_overview.md` so you know the stages and where to look.
-2. Write a focused diagnostic SQL in `sql/00_diagnostics/Qn_<question>.sql`. Keep it read-only, cheap, and section-by-section so each answer is its own result grid.
-3. Run it in Snowsight. Save every result grid as CSV.
-4. Analyze the CSVs, write up findings in `knowledge_base/insights/` or a note back to the team.
-5. If the finding changes the pipeline definition (e.g. a new filter rule), patch the relevant `sql/*.sql` file and rerun downstream stages.
-
-### Rebuild the registry
-
-1. (Optional) Rerun upstream silver jobs if Dealroom/RC data has been refreshed.
-2. Run `sql/80_registry/80_consolidated_startup_registry.sql` in Snowsight (Run All).
-3. Verify the validation queries at the bottom (entity-type totals, inclusion-reason breakdown, conflict/review counts).
-4. Refresh row-count waypoints in `docs/pipeline_overview.md` via `sql/00_diagnostics/pipeline_row_counts.sql` if the counts have shifted meaningfully.
-
-### Apply a manual review decision
-
-1. Seed the decision in `REF.MANUAL_REVIEW_DECISIONS` — either via Snowsight direct insert (for small fixes, see `sql/10_utils/71_seed_match_whitelist.sql` as a template) or via CSV upload through `REF.MERGE_REVIEW_UPLOAD`.
-2. Rerun `80_registry/80_consolidated_startup_registry.sql`. Match-whitelist decisions flow in automatically via the `match_bridge` CTE.
-
-### Run the website review task
-
-The only Python task still active. Requires `pip install -e .` once in a fresh venv to make `eco` callable.
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-
-# Then:
-python scripts/pipeline/run_website_review.py              # default tier 1_high
-python scripts/pipeline/run_website_review.py --tier 2_medium
+Quebec VC investment totaled $2B across 108 deals in 2024.
+While total invested amounts rose 35% year-over-year, deal
+volume declined 25%. The seed stage saw the most pronounced
+contraction: 39 deals representing $112M, down 52% in volume
+and 65% in value compared to 2023.
 ```
 
-Logs go to `logs/<date>.jsonl`. Outputs go to `data/04_auto_reviews/`. Both directories are gitignored.
+Key rules:
+- `source_type: licensed` means the insight was derived from Dealroom, PitchBook, or other commercial data — only aggregates are permitted
+- `source_type: public` means anyone can verify the number from a public source
+- `source_type: derived` means it was computed from a combination of sources
+- The narrative section below the frontmatter should be self-contained and readable without the structured data
 
----
+## Skills reference
 
-## Non-negotiables
+Shared skills in `skills/` are loaded by Claude Code at session start. They teach Claude Code how to work within this repo's conventions. Key skills:
 
-- **Never commit `.env`.** `.env.example` is the template; real secrets go in `.env` which is gitignored.
-- **Read-only queries stay read-only.** Diagnostic SQL in `00_diagnostics/` must never write to tables.
-- **Manual review decisions are append-only.** Never UPDATE `REF.MANUAL_REVIEW_DECISIONS` — always insert a newer row; `V_MANUAL_REVIEW_CURRENT` takes the latest.
-- **Never delete files from `archive/`** without explicit approval. The whole point of archiving is that it's reversible.
-- **When reporting startup counts, prefer decomposable ranges over single numbers** (see `memory/feedback_registry_narrative.md` for the rationale). Example: "6,507 in the raw registry, ~5,100–5,500 clearly tech after accounting for RC_ONLY dark matter, 4,651 if you only trust Dealroom's classification."
-- **No raw PII leaves Snowflake.** Aggregates, IDs, and statistics only in outputs that go to external systems.
+- **taxonomy-lookup** — How to read and apply sector codes, stage labels, and startup criteria from the YAML files
+- **snowflake-query** — Shared table schemas, SQL patterns, naming conventions
+- **insight-extractor** — How to structure findings into the frontmatter format, enforcing aggregation rules
+- **report-builder** — How to initialize a report branch with the correct folder structure
+- **data-enrichment** — How to enrich datasets using Dealroom, Snowflake, and web sources while respecting data governance
+- **branch-conventions** — Naming rules, commit format, PR workflow, scratch-vs-merge decisions
 
----
+## Partner organizations
 
-## Current focus (Q2 2026)
+| Org | Abbreviation | Primary data contributions |
+|-----|-------------|---------------------------|
+| Quebec Tech (formerly AQT) | QT | Dealroom/Radar data, ecosystem portraits, startup counts |
+| Réseau Capital | RC | PitchBook VC/PE data, deal flow analytics, AI Index |
+| Conseil de l'Innovation du Québec | CIQ | Baromètre de l'innovation, policy metrics |
 
-1. **Portrait du Québec Tech 2026** — flagship annual report, target October 2026. Driven by the registry.
-2. **Recommendation reports** — data-backed policy briefs for government stakeholders.
-3. **Data partnership conversations** — clarifying three open questions with Réseau Capital (sector taxonomy in Harmonic-only rows, where PitchBook tracks acquisitions, pre-1990 methodology alignment).
-4. **RC_ONLY sector classification** — 97% of RC_ONLY rows have no sector assignment. Next step is either programmatic name-based classification or a richer Harmonic extract from the partner.
+## Quarterly cycle
 
----
-
-## Environment notes
-
-- Python ≥3.11 (3.14 via homebrew on the author's machine)
-- No `uv` installed — use `python3 -m venv .venv` + `pip install -e ".[dev]"`
-- macOS (Darwin), scheduling via launchd when needed (no active schedules right now)
-- Snowflake is the only backend that matters; the local machine is a Snowsight client, not a data store
-
----
-
-## If something is confusing
-
-- **Pipeline question?** Read `docs/pipeline_overview.md`. Every stage and number is explained there.
-- **"Why is this number so weird?"** Check `sql/00_diagnostics/` for the Q-file that already investigated it, or write a new one.
-- **"What was this function / file for?"** If it's in `archive/`, check the path — we grouped by original purpose. Grep for the filename in `git log archive/` to find its last real use.
-- **"Can I run the old knowledge base search?"** Not out of the box — the ChromaDB + DocumentStore engine is in `archive/python-package/knowledge/`. We now manage the KB as plain markdown files in `knowledge_base/` and rely on editor search.
+Each quarter follows this rhythm:
+1. **Taxonomy review** — Any needed definition changes are proposed via `taxonomy/` branches and merged early in the quarter
+2. **Report production** — Active `report/` branches for the quarter's deliverables, pulling from Snowflake and extracting insights
+3. **Insight consolidation** — Report branches merge, new insights land on main
+4. **Release tag** — Main is tagged (e.g., `v2026-Q2`) as the quarter's canonical snapshot
+5. **Skills refinement** — Any skill improvements discovered during the quarter get PRed to main

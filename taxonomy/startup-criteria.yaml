@@ -1,0 +1,58 @@
+# Quebec Ecosystem Data — Startup Criteria
+# Defines what qualifies as a "startup" for ecosystem metrics.
+# Changes require a taxonomy/ branch and cross-org PR review.
+#
+# A company must meet ALL required criteria and at least ONE
+# of the supplementary criteria to be classified as a startup.
+
+startup_criteria:
+
+  required:
+    - criterion: technology_driven
+      description: "The company's core product or service relies on proprietary technology, software, or a technology-enabled business model"
+      notes: "Traditional businesses using off-the-shelf technology do not qualify"
+
+    - criterion: age
+      description: "Founded within the last 15 years"
+      threshold: 15
+      unit: years
+      notes: "Measured from incorporation date or first commercial activity, whichever is earlier"
+
+    - criterion: independent
+      description: "Independently operated — not a subsidiary, division, or spinoff still controlled by the parent"
+      notes: "University spinoffs qualify once they are independently incorporated and governed"
+
+    - criterion: growth_oriented
+      description: "The company is pursuing growth (revenue, users, market expansion) rather than stable lifestyle operation"
+      notes: "This is a qualitative assessment. Indicators include: VC/angel funding, accelerator participation, hiring trajectory, market expansion plans"
+
+  supplementary_minimum: 1  # Must meet at least one of the following
+
+  supplementary:
+    - criterion: equity_funding
+      description: "Has raised equity funding (angel, VC, PE growth)"
+      notes: "Grants alone do not qualify under this criterion"
+
+    - criterion: revenue_growth
+      description: "Demonstrates significant revenue growth (>20% YoY)"
+
+    - criterion: innovation_activity
+      description: "Active R&D program, patents filed, or participation in innovation programs"
+
+    - criterion: scalable_model
+      description: "Business model designed for scale (SaaS, platform, marketplace, licensing)"
+
+  exclusions:
+    - "Consulting firms, even if technology-focused"
+    - "Sole proprietorships without employees or contractors"
+    - "Companies that have been acquired and absorbed into the acquirer"
+    - "Government agencies or Crown corporations"
+    - "Non-profit organizations (unless they have a commercial technology arm)"
+
+# Notes on edge cases:
+# - A 16-year-old company that recently pivoted to a new technology product:
+#   does NOT qualify (age criterion is strict)
+# - A hardware company with significant software/IP component: qualifies
+# - A company founded 10 years ago with flat revenue but active R&D:
+#   qualifies if it meets the growth_oriented criterion qualitatively
+# - Discuss edge cases via taxonomy/ branch PRs

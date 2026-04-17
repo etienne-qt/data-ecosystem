@@ -1,0 +1,91 @@
+# Quebec Ecosystem Data — Geography Taxonomy
+# Canonical region and city codes for Quebec and comparison regions.
+# Changes require a taxonomy/ branch and cross-org PR review.
+#
+# Hierarchy: country → province/state → metro → city
+# Codes use ISO 3166-2 where applicable (e.g., CA-QC for Quebec).
+
+regions:
+
+  # --- Country level ---
+
+  - code: CA
+    label_en: "Canada"
+    label_fr: "Canada"
+    parent: null
+    iso_code: "CA"
+
+  - code: US
+    label_en: "United States"
+    label_fr: "États-Unis"
+    parent: null
+    iso_code: "US"
+
+  # --- Canadian provinces (focus: Quebec; comparison: major tech provinces) ---
+
+  - code: CA-QC
+    label_en: "Quebec"
+    label_fr: "Québec"
+    parent: CA
+    iso_code: "CA-QC"
+
+  - code: CA-ON
+    label_en: "Ontario"
+    label_fr: "Ontario"
+    parent: CA
+    iso_code: "CA-ON"
+
+  - code: CA-BC
+    label_en: "British Columbia"
+    label_fr: "Colombie-Britannique"
+    parent: CA
+    iso_code: "CA-BC"
+
+  - code: CA-AB
+    label_en: "Alberta"
+    label_fr: "Alberta"
+    parent: CA
+    iso_code: "CA-AB"
+
+  # --- Quebec metropolitan areas ---
+
+  - code: MTL
+    label_en: "Greater Montreal"
+    label_fr: "Grand Montréal"
+    parent: CA-QC
+    description: "Communauté métropolitaine de Montréal (CMM)"
+
+  - code: QCC
+    label_en: "Quebec City metro"
+    label_fr: "Communauté métropolitaine de Québec"
+    parent: CA-QC
+    description: "Communauté métropolitaine de Québec (CMQ)"
+
+  - code: SHE
+    label_en: "Sherbrooke region"
+    label_fr: "Sherbrooke et région"
+    parent: CA-QC
+
+  - code: TR
+    label_en: "Trois-Rivières region"
+    label_fr: "Trois-Rivières et région"
+    parent: CA-QC
+
+  - code: GAT
+    label_en: "Gatineau / Outaouais"
+    label_fr: "Gatineau / Outaouais"
+    parent: CA-QC
+
+  - code: SAG
+    label_en: "Saguenay–Lac-Saint-Jean"
+    label_fr: "Saguenay–Lac-Saint-Jean"
+    parent: CA-QC
+
+  # --- Placeholder for city-level entries ---
+  # Add individual cities (Longueuil, Laval, Lévis, Drummondville, etc.)
+  # as needed under their parent metro or province.
+
+# Notes:
+# - Use the most specific code available when assigning a company's geography.
+# - For roll-ups, the `parent` field lets queries aggregate up the hierarchy.
+# - "QC" (without prefix) is also accepted as shorthand for CA-QC in legacy data.

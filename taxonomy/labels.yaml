@@ -1,0 +1,97 @@
+# Quebec Ecosystem Data — Labels & Flags Taxonomy
+# Canonical tags, flags, and categorical labels beyond sector/stage/geography.
+# Changes require a taxonomy/ branch and cross-org PR review.
+
+labels:
+
+  # --- Business model labels ---
+
+  - code: B2B
+    label_en: "Business-to-business"
+    label_fr: "B2B — entreprise à entreprise"
+    category: business_model
+
+  - code: B2C
+    label_en: "Business-to-consumer"
+    label_fr: "B2C — entreprise à consommateur"
+    category: business_model
+
+  - code: B2G
+    label_en: "Business-to-government"
+    label_fr: "B2G — entreprise à gouvernement"
+    category: business_model
+
+  - code: MARKETPLACE
+    label_en: "Marketplace / two-sided"
+    label_fr: "Place de marché / bifaces"
+    category: business_model
+
+  - code: SAAS
+    label_en: "SaaS"
+    label_fr: "Logiciel-service (SaaS)"
+    category: business_model
+
+  - code: HARDWARE
+    label_en: "Hardware / physical product"
+    label_fr: "Matériel / produit physique"
+    category: business_model
+
+  - code: SERVICES
+    label_en: "Services / consulting"
+    label_fr: "Services / consultation"
+    category: business_model
+
+  # --- Company status flags ---
+
+  - code: ACTIVE
+    label_en: "Active"
+    label_fr: "Actif"
+    category: status
+
+  - code: ACQUIRED
+    label_en: "Acquired"
+    label_fr: "Acquis"
+    category: status
+
+  - code: CLOSED
+    label_en: "Closed / dissolved"
+    label_fr: "Fermé / dissout"
+    category: status
+
+  - code: IPO
+    label_en: "Publicly listed (IPO)"
+    label_fr: "Coté en bourse (IPO)"
+    category: status
+
+  # --- Founder / team flags ---
+
+  - code: UNIVERSITY_SPINOFF
+    label_en: "University spinoff"
+    label_fr: "Essaimage universitaire"
+    category: origin
+
+  - code: CORPORATE_SPINOFF
+    label_en: "Corporate spinoff"
+    label_fr: "Essaimage corporatif"
+    category: origin
+
+  - code: FEMALE_FOUNDED
+    label_en: "Female-founded or co-founded"
+    label_fr: "Fondé ou co-fondé par une femme"
+    category: diversity
+    notes: "Apply when at least one founder identifies as a woman."
+
+  # --- Innovation / IP flags ---
+
+  - code: PATENTS_FILED
+    label_en: "Has filed patents"
+    label_fr: "A déposé des brevets"
+    category: innovation
+
+  - code: R_D_INTENSIVE
+    label_en: "R&D intensive"
+    label_fr: "Intensif en R-D"
+    category: innovation
+    notes: "Company reports significant R&D spend (>15% of revenue) or has ongoing SR&ED/RSDE claims."
+
+  # --- Add new labels via taxonomy/ branches ---

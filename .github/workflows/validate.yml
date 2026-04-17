@@ -1,0 +1,29 @@
+name: Validate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate taxonomy YAML structure
+        run: python pipelines/validation/hooks/validate_taxonomy.py
+
+      - name: Block data files outside public-data/
+        run: python pipelines/validation/hooks/check_data_files.py
+
+      - name: Warn on large files outside reports/
+        run: python pipelines/validation/hooks/check_file_size.py
