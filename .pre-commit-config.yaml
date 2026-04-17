@@ -3,14 +3,14 @@ repos:
     hooks:
       - id: check-data-files
         name: Block data files outside public-data/
-        entry: python pipelines/validation/hooks/check_data_files.py
+        entry: python3 pipelines/validation/hooks/check_data_files.py
         language: system
         pass_filenames: false
         always_run: true
 
       - id: check-file-size
         name: Warn on files larger than 1 MB (outside reports/)
-        entry: python pipelines/validation/hooks/check_file_size.py
+        entry: python3 pipelines/validation/hooks/check_file_size.py
         language: system
         pass_filenames: false
         always_run: true
@@ -18,6 +18,7 @@ repos:
       - id: validate-taxonomy
         name: Validate taxonomy/*.yaml structure
         entry: python pipelines/validation/hooks/validate_taxonomy.py
-        language: system
+        language: python
+        additional_dependencies: ["pyyaml>=6.0"]
         pass_filenames: false
         files: ^taxonomy/.*\.yaml$
