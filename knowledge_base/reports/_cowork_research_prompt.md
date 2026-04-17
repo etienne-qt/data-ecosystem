@@ -168,3 +168,122 @@ When adding insights to `insights/by-topic/{topic}.md`:
 1. Run `cat ecosystem/knowledge_base/reports/_registry.md` to show the populated registry
 2. Run `wc -l ecosystem/knowledge_base/insights/_index.csv` to show insight count
 3. Summarize: how many reports ingested, how many insights extracted, which topics have the most coverage, and which topics have gaps
+
+---
+
+## Processing Internal Analyses
+
+When Quebec Tech runs an internal analysis — SQL query results, REQ data extracts, Snowflake pipeline outputs, or any internally-generated dataset — the findings should flow into the knowledge base through a two-step process: first an `internal/` card, then promotion to the `messages/` layer.
+
+### Step 1 — Create an `internal/` card
+
+Create a file at `ecosystem/knowledge_base/internal/{id}.md` using this template:
+
+```markdown
+---
+id: INTERNAL-{id}
+title: "..."
+type: internal-analysis
+author: Data & Analytics, Quebec Tech
+date: YYYY-MM-DD
+data_sources: [REQ, Dealroom, PitchBook, Snowflake, ...]
+topics: [funding, hard-tech, macro-trends, ecosystem-size, ...]
+geography: quebec
+status: draft | final
+---
+
+# {Title}
+
+## TL;DR
+2-3 sentences: the single most important takeaway.
+
+## Key Findings
+Numbered list of concrete findings with numbers. Each tagged [topic].
+
+## Quebec-Specific Context
+What this means specifically for Quebec.
+
+## Methodology Notes
+How data was collected, scope, caveats, script locations.
+
+## Extracted Messages
+Messages to promote to `messages/{theme}.md`. Format as MSG entries (see below).
+
+## Limitations & Open Questions
+What this analysis can't answer; what follow-up would strengthen the findings.
+```
+
+**Rules for internal cards:**
+- Keep the raw findings in `Key Findings` without editorializing — tag each with `[topic]` in brackets.
+- Methodology Notes must reference the actual script path and data source extract date.
+- Status is `draft` until someone from the data team has reviewed the methodology; then `final`.
+- Do not include raw individual company names or PII — aggregate-level findings only.
+
+### Step 2 — Promote key findings to `messages/`
+
+After writing the `internal/` card, identify the 2–5 strongest, most citable findings and promote them to the relevant `messages/{theme}.md` file using the MSG entry format:
+
+```markdown
+### MSG-{THEME}-{nn}: Short title
+- **Claim:** One clear sentence with the number/finding
+- **Confidence:** High | Medium | Low
+- **Evidence:** INTERNAL-{id}
+- **Implication:** One sentence on why this matters for QT's work
+- **Last verified:** YYYY-MM-DD
+```
+
+**Promotion rules:**
+- Only promote findings that are self-contained: the claim must be understandable without reading the full analysis.
+- Every promoted claim must include the specific number or finding — no vague claims ("X has grown significantly").
+- Set Confidence based on: High = primary data, documented methodology, clean signal; Medium = single internal analysis or known data quality caveats; Low = proxy data (CAE code fallback, small samples, preliminary).
+- The `Evidence` field must point back to the `INTERNAL-{id}` card, not to the raw source directly.
+- Assign the next sequential number (`nn`) within the theme — check existing entries in the theme file before assigning.
+- Update the `msg_count` in the theme file's frontmatter.
+
+### ID convention
+
+Internal analysis IDs follow this pattern: `INTERNAL-{slug}-{year}`
+
+- **{slug}** — a short, descriptive kebab-case identifier for the analysis (e.g., `sprint1-funding`, `hardware-photonics-req`, `genai-impact-req`, `registry-coverage-audit`). Should be unique and searchable.
+- **{year}** — four-digit year of the analysis date.
+
+Examples:
+- `INTERNAL-sprint1-funding-2026` → `internal/sprint1-funding-2026.md`
+- `INTERNAL-hardware-photonics-req-2026` → `internal/hardware-photonics-req-2026.md`
+- `INTERNAL-registry-coverage-audit-2026` → `internal/registry-coverage-audit-2026.md`
+
+The `id` field in the frontmatter must match the filename (without `.md`), prefixed with `INTERNAL-`.
+
+### Updating the KB index
+
+After creating a new `internal/` card, add it to the `Internal Analyses` section of `ecosystem/knowledge_base/index.md` and update the `updated:` date in the frontmatter.
+
+---
+
+## Hardware & Hard Tech — Additional Scope
+
+The research pipeline should actively seek out reports covering Quebec and Canadian hard-tech sectors. These are currently underrepresented in the knowledge base relative to their strategic importance. Add these to the **Tier 2** and **Tier 3** research queues when ingesting external reports:
+
+### Tier 2 additions — Hard Tech Context
+
+- **Écotech Québec annual reports** — Quebec's cleantech cluster organization; covers hardware-heavy sectors including energy tech, water tech, and materials. Annual publication, available on their website.
+
+- **MEDTEQ+ annual reports** — Consortium de recherche et d'innovation en technologies médicales du Québec; covers medical device and health hardware companies. Focus on Quebec.
+
+- **adMare BioInnovations reports** — Canadian life sciences investment platform with a hardware-adjacent mandate (biotools, diagnostics equipment). Tracks spinoff and commercialization activity.
+
+- **NSERC / FRQNT spinoff and commercialization reports** — Federal and provincial research council reports on commercialization outcomes from academic research grants. Include data on spinoff companies that may not appear in Dealroom or REQ at incorporation stage.
+
+- **CB Insights hard tech trend reports** — Global context on deep tech investment flows; useful for benchmarking Quebec's sector against international hard tech trends. Note: secondary source, credibility = medium unless methodology appendix available.
+
+- **Dealroom hard tech and deep tech ecosystem reports** — If publicly available editions exist, ingest for global/European benchmarks. The underlying data is available in DEV_QUEBECTECH but aggregate reports provide analyst interpretation.
+
+### Tier 3 additions — Sector-Specific Hard Tech
+
+- **INO (Institut national d'optique) annual reports** — If publicly available, INO's annual report would provide the most authoritative signal on Quebec's photonics commercialization pipeline. INO is the anchor institution of the Quebec City photonics cluster.
+
+- **CHIPS Act impact reports (US and Canada's response)** — The US CHIPS and Science Act (August 2022) and Canada's semiconductor strategy responses. Relevant for understanding capital flows into hardware and whether any of that policy momentum is visible in Quebec incorporation data.
+
+- **Scale AI reports (hardware/AI intersection)** — Scale AI is a Canadian AI supercluster with a mandate that intersects hardware and AI. Reports may cover embedded AI, edge computing, and robotics sectors that are adjacent to QT's hard-tech tracking mandate.
+
+**Research note:** For hard-tech reports, pay particular attention to sections that include **spinoff counts**, **commercialization rates**, **laboratory-to-market timelines**, and **capital requirements per company** — these are the metrics most useful for calibrating QT's expectations about hard-tech company formation and funding relative to software startups.

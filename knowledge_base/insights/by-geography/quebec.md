@@ -3,9 +3,9 @@ title: Research Insights — Quebec
 type: insight-compilation
 geography: [quebec]
 created: 2026-04-08
-updated: 2026-04-08
+updated: 2026-04-15
 status: living
-sources_count: 14
+sources_count: 20
 ---
 
 # Quebec — Research Insights
@@ -20,6 +20,9 @@ sources_count: 14
 4. **Cost and talent advantage** — 37% cost advantage for tech operations, early-stage funding 78% above global average, Quebec City emerging as #3 "Bang for Buck"
 5. **Inclusivity and pipeline challenges** — Declining entrepreneurial intentions among immigrants and women; one-third of fragile businesses at risk of closure
 6. **Policy complexity hindering uptake** — 10,000+ government support measures overwhelming SMEs; no angel tax credit; 20-year R&D investment decline
+7. **Declining and aging entrepreneur base** — Entrepreneur population down 35% from 1992 peak to 128K; 37.4% aged 55+; entrepreneurship rate (1.8%) consistently below Canada (2.3%); Montreal lowest rate among major metros
+8. **Quebec advancing in global ecosystem rankings** — Identified as fastest-advancing ecosystem 2022-2024 by Mind the Bridge; "Hypercrissance Québec" featured in Startup Genome Scaleup Report; Late Startup stage with 216 scaleups
+9. **Productivity and innovation model gap** — Québécois workers 47% less productive per hour than Swedish counterparts; Sweden spends 3.4% GDP on R&D vs Canada's 1.9%; Triple Helix model contrast
 
 ## All Insights (by date)
 
@@ -57,6 +60,17 @@ sources_count: 14
 | INS-montreal-international-2025-01 | Montreal 37% cost advantage for tech operations | talent;macro-trends | 2025 | high | montreal-international-2025 |
 | INS-montreal-international-2025-02 | 48,000+ AI-skilled workers in Greater Montreal | ai-sector;talent | 2025 | medium-high | montreal-international-2025 |
 | INS-montreal-international-2025-03 | $2.7B FDI supported, avg salaries >$105K | funding;macro-trends | 2024 | high | montreal-international-2025 |
+
+| INS-meie-portrait-entrepreneurs-2025-01 | QC entrepreneur pop declined 35% from 197K (1992) to 128K (2024) | macro-trends;entrepreneurship | 2024 | high | meie-portrait-entrepreneurs-2025 |
+| INS-meie-portrait-entrepreneurs-2025-02 | QC entrepreneurship rate 1.8% vs Canada 2.3% | macro-trends;entrepreneurship | 2024 | high | meie-portrait-entrepreneurs-2025 |
+| INS-meie-portrait-entrepreneurs-2025-03 | 37.4% QC entrepreneurs aged 55+, up from 16.1% in 1978 | talent;macro-trends | 2024 | high | meie-portrait-entrepreneurs-2025 |
+| INS-meie-portrait-entrepreneurs-2025-04 | Female entrepreneurs 24.8% below Canada avg 26.6% | talent;entrepreneurship | 2024 | high | meie-portrait-entrepreneurs-2025 |
+| INS-meie-portrait-entrepreneurs-2025-05 | Immigrant entrepreneurship QC 1.8% vs rest of Canada 3.2% | talent;entrepreneurship | 2024 | high | meie-portrait-entrepreneurs-2025 |
+| INS-meie-portrait-entrepreneurs-2025-06 | Montreal lowest entrepreneurship rate (1.8%) of major Canadian metros | macro-trends;entrepreneurship | 2024 | high | meie-portrait-entrepreneurs-2025 |
+| INS-mtb-ai-policy-2025-02 | Quebec among fastest-advancing ecosystems globally 2022-2024 | entrepreneurship;macro-trends | 2024 | high | mtb-ai-policy-2025 |
+| INS-startup-genome-scaleup-2023-02 | "Hypercrissance Québec" dedicated section in Scaleup Report | entrepreneurship;commercialization;policy | 2023 | high | startup-genome-scaleup-2023 |
+| INS-lapresse-sweden-innovation-2025-01 | Québécois workers 47% less productive per hour than Swedes | macro-trends;policy | 2025 | medium | lapresse-sweden-innovation-2025 |
+| INS-startupblink-2023-02 | Montreal's AI research-to-startup pipeline (MILA) recognized | ai-sector;entrepreneurship;ip-research | 2023 | medium | startupblink-2023 |
 
 ## Gaps
 - Detailed regional breakdown within Quebec (Montreal vs. Quebec City vs. regions) across all metrics

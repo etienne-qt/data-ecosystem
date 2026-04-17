@@ -2,7 +2,7 @@
 title: Report Series Tracker
 type: registry
 created: 2026-04-08
-updated: 2026-04-08
+updated: 2026-04-15
 ---
 
 # Report Series Tracker
@@ -28,6 +28,13 @@ comparison in the relevant `insights/by-topic/` file.
 - **Editions ingested:**
   - [x] 2025 → [summary](summaries/gser-2025.md)
   - [ ] 2024 (not yet ingested)
+  - [ ] 2023 (PDF too large to extract — 129MB)
+  - [x] 2022 → [summary](summaries/gser-2022.md)
+  - [x] 2021 → [summary](summaries/gser-2021.md)
+  - [x] 2020 → [summary](summaries/gser-2020.md)
+  - [x] 2019 → [summary](summaries/gser-2019.md)
+  - [x] 2018 → [summary](summaries/gser-2018.md)
+  - [x] 2017 → [summary](summaries/gser-2017.md)
 
 ### bdc-vc-landscape
 - **Publisher:** BDC / BDC Capital
@@ -148,3 +155,66 @@ comparison in the relevant `insights/by-topic/` file.
 - **Key metrics tracked:** FDI supported ($), jobs created, STEM workforce, AI talent pool, cost benchmarks, accelerator/incubator count
 - **Editions ingested:**
   - [x] 2025 → [summary](summaries/montreal-international-2025.md)
+
+### meie-portrait-entrepreneurs
+- **Publisher:** Ministère de l'Économie, de l'Innovation et de l'Énergie du Québec (MEIE)
+- **Frequency:** irregular
+- **Key metrics tracked:** Entrepreneur count, entrepreneurship rate, demographics (gender, age, immigration), education, sector breakdown
+- **Editions ingested:**
+  - [x] 2025 → [summary](summaries/meie-portrait-entrepreneurs-2025.md)
+
+### mtb-policy
+- **Publisher:** Mind the Bridge & International Chamber of Commerce
+- **Frequency:** annual
+- **Key metrics tracked:** Global scaleup count, ecosystem lifecycle stage, policy initiative tracking, geographic distribution
+- **Editions ingested:**
+  - [x] 2025 → [summary](summaries/mtb-ai-policy-2025.md)
+
+### deloitte-bdc-cvc
+- **Publisher:** Deloitte / BDC Capital
+- **Frequency:** irregular
+- **Key metrics tracked:** CVC deal count, deal size, domestic vs foreign split, sector concentration, participation rates
+- **Editions ingested:**
+  - [x] 2024 → [summary](summaries/deloitte-bdc-cvc-canada.md)
+
+### deloitte-catalyst-canada-2050
+- **Publisher:** Deloitte Canada
+- **Frequency:** irregular (policy series)
+- **Key metrics tracked:** Scale-up archetypes, talent challenges, commercialization bottlenecks, IP licensing revenue
+- **Editions ingested:**
+  - [x] 2022 → [summary](summaries/deloitte-innovation-scale-canada.md)
+
+### stanford-unicorn
+- **Publisher:** Stanford University
+- **Frequency:** annual (updates)
+- **Key metrics tracked:** Unicorn count, time to unicorn, capital requirements, exit outcomes, geographic distribution, VC success factors
+- **Editions ingested:**
+  - [x] 2024 → [summary](summaries/stanford-unicorn-2024.md)
+
+### lapresse-analysis
+- **Publisher:** La Presse
+- **Frequency:** irregular
+- **Key metrics tracked:** International benchmarking, productivity comparisons, R&D intensity, innovation models
+- **Editions ingested:**
+  - [x] 2025 (Sweden innovation) → [summary](summaries/lapresse-sweden-innovation-2025.md)
+
+### startupblink
+- **Publisher:** StartupBlink
+- **Frequency:** annual
+- **Key metrics tracked:** City/country ecosystem ranking, Quantity/Quality/Business Environment scores, sector growth rates
+- **Editions ingested:**
+  - [x] 2025 → [summary](summaries/startupblink-2025.md)
+  - [x] 2023 → [summary](summaries/startupblink-2023.md)
+  - [x] 2022 → [summary](summaries/startupblink-2022.md)
+  - [x] 2020 → [summary](summaries/startupblink-2020.md)
+  - [x] 2019 → [summary](summaries/startupblink-2019.md)
+  - [x] 2017 → [summary](summaries/startupblink-2017.md)
+  - [ ] 2021 (not yet ingested)
+  - [ ] 2018 (not yet ingested)
+
+### startup-genome-scaleup
+- **Publisher:** Startup Genome
+- **Frequency:** irregular
+- **Key metrics tracked:** Scaleup rate (%), ecosystem lifecycle phases, Local Connectedness Index, founder success factors
+- **Editions ingested:**
+  - [x] 2023 → [summary](summaries/startup-genome-scaleup-2023.md)
