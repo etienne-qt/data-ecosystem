@@ -4,6 +4,16 @@ Concrete walkthroughs for the things you'll actually do in this repo.
 Each scenario shows the branch you create, the commands you run, what
 Claude Code can do for you, and what lands in `main`.
 
+**Branch close-out — applies to every scenario below.** After your PR
+merges, delete the branch. If the repo has "Automatically delete head
+branches" enabled (it should), GitHub handles the remote side for you.
+Locally: `git fetch --prune && git branch -d branch-name`. For scratch
+branches that never merge, cherry-pick anything useful first and then
+just `git branch -D scratch/...` — nothing is lost because the commits
+stay reachable on main (or, for pure scratch, are simply gone, which
+is what we want). See `CONTRIBUTING.md` § Branch lifecycle for the full
+reasoning and safe-deletion one-liners.
+
 Before anything else, know the four branch types (from
 `skills/branch-conventions.md`):
 

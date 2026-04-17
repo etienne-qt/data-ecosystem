@@ -204,6 +204,12 @@ In the repo settings → Branches → Add branch protection rule for `main`:
 - **Require status checks to pass**: Yes (once CI is set up)
 - **Require branches to be up to date**: Yes
 
+In the repo settings → General → **Pull Requests** section:
+
+- ☑ **Automatically delete head branches** — deletes the remote branch automatically when a PR merges. Single most effective hygiene toggle; enable on day 1 so branches don't accumulate. Full policy: `CONTRIBUTING.md` § Branch lifecycle.
+
+The stale-branch GitHub Action at `.github/workflows/stale-branches.yml` runs every Monday at 09:00 Toronto time and auto-updates a tracking issue with any branch that has had no commits in 30+ days. Reviewers use that issue to decide: resume, promote, or delete — the workflow never deletes branches itself.
+
 Create a `CODEOWNERS` file in the repo root:
 
 ```

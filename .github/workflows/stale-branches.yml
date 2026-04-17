@@ -1,0 +1,79 @@
+name: Flag stale branches
+
+on:
+  schedule:
+    # Mondays at 09:00 America/Toronto (13:00 UTC).
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  flag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: List stale branches
+        id: scan
+        run: |
+          set -euo pipefail
+          THRESHOLD_DAYS=30
+          NOW=$(date +%s)
+          CUTOFF=$((NOW - THRESHOLD_DAYS * 24 * 3600))
+
+          # Pull all remote branches except main and the default branch.
+          git for-each-ref --format='%(refname:short) %(committerdate:unix)' refs/remotes/origin \
+            | grep -v 'origin/HEAD' \
+            | grep -v 'origin/main$' \
+            > /tmp/all_branches.txt || true
+
+          : > /tmp/stale.txt
+          while read -r branch ts; do
+            [ -z "$branch" ] && continue
+            if [ "$ts" -lt "$CUTOFF" ]; then
+              age_days=$(( (NOW - ts) / 86400 ))
+              short="${branch#origin/}"
+              echo "- \`$short\` — last commit ${age_days}d ago" >> /tmp/stale.txt
+            fi
+          done < /tmp/all_branches.txt
+
+          if [ -s /tmp/stale.txt ]; then
+            echo "found_stale=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found_stale=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "---"
+          echo "Stale branches (>${THRESHOLD_DAYS}d):"
+          cat /tmp/stale.txt || echo "  (none)"
+
+      - name: Open / update tracking issue
+        if: steps.scan.outputs.found_stale == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="Stale branches — weekly review"
+          BODY_HEADER="This issue is auto-updated weekly with branches that have had no commits in 30+ days. The owner should either resume the work, promote useful commits to a proper branch, or delete the branch. See CONTRIBUTING.md § Branch lifecycle."
+          {
+            echo "$BODY_HEADER"
+            echo ""
+            echo "_Last scan: $(date -u '+%Y-%m-%d %H:%M UTC')_"
+            echo ""
+            echo "## Stale branches"
+            cat /tmp/stale.txt
+          } > /tmp/body.md
+
+          EXISTING=$(gh issue list --search "$TITLE in:title" --state open --json number --jq '.[0].number' || echo "")
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --body-file /tmp/body.md
+            echo "Updated issue #$EXISTING"
+          else
+            gh issue create --title "$TITLE" --body-file /tmp/body.md --label "housekeeping" || \
+              gh issue create --title "$TITLE" --body-file /tmp/body.md
+          fi

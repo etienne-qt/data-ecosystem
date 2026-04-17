@@ -135,6 +135,49 @@ Scratch branches are your personal workspace. Use them freely:
 5. Merge via squash-and-merge to keep main's history clean
 6. After merge, delete the remote branch
 
+## Branch lifecycle — when to delete, when to keep
+
+Short version: **delete merged branches. Keep tags for permanent markers.** Nothing is lost by deleting — the commits live on `main` and the PR page on GitHub stays searchable forever.
+
+### Policy
+
+| State | What to do |
+|-------|-----------|
+| PR merged (any branch type) | Delete the branch (local + remote). GitHub auto-deletes the remote if the repo setting is on. Locally: `git branch -d branch-name`. |
+| `scratch/` branch, work complete | Cherry-pick any reusable artifacts into a proper branch, then delete. `git branch -D scratch/...` if local-only. |
+| Open branch with no activity for 30+ days | Stale. A weekly workflow flags these. Owner decides: resume, promote useful commits, or close. |
+| End of quarter, canonical snapshot needed | Tag `main`, don't keep a branch. `git tag v2026-Q2 && git push origin v2026-Q2`. |
+| Destructive deletion concern | Never needed. Even a force-delete of a merged branch leaves all commits reachable via `main`. |
+
+### Why deletion is safe
+
+- **Commits aren't attached to branches.** They're content-addressed objects. A branch name is a pointer to one of them. Deleting the pointer doesn't delete the commit as long as another ref (like `main`) still reaches it.
+- **Merged = reachable from main.** Once your PR merges, every commit on your branch is either on `main` (merge-commit) or subsumed by a single squash commit on `main`. Either way, `git log main` still finds the work.
+- **GitHub keeps the PR.** Even after the branch is deleted, the PR URL, diff, comments, and commit list stay on GitHub indefinitely. You can recover the exact state with `git fetch origin pull/<number>/head` if ever needed.
+
+### GitHub repo settings to enable
+
+In the repo's **Settings → General → Pull Requests** section, turn on:
+
+- ☑ **Automatically delete head branches** — deletes the remote branch automatically after a PR is merged.
+
+This is a one-time setup by the repo admin and handles 90% of cleanup without anyone thinking about it.
+
+### Local cleanup
+
+Remote branches that have been deleted server-side stick around in your local clone until you prune:
+
+```bash
+git fetch --prune                    # drop stale remote-tracking refs
+git branch --merged main             # list local branches fully merged into main
+git branch -d <name>                 # safe-delete merged local branches
+```
+
+A one-liner to clean every local branch that's already merged:
+```bash
+git branch --merged main | grep -v '^\*\|main$' | xargs -r git branch -d
+```
+
 ## Data governance — what you can and can't commit
 
 **Read `DATA-GOVERNANCE.md` for the full policy.** The short version:
