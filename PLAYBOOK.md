@@ -34,19 +34,30 @@ git checkout main && git pull
 git checkout -b scratch/rc-seed-ict-2024
 ```
 
-**In Claude Code:**
-> "Write a Snowflake query that returns the count of seed-stage deals
-> and median round size for Quebec ICT companies in 2024. Use the
-> taxonomy codes from `taxonomy/sectors.yaml` and stage codes from
-> `taxonomy/stages.yaml`. Aggregate only — don't return
-> company-level rows."
+**The handoff loop** — Claude Code does NOT connect to Snowflake yet.
+The workflow has four steps:
 
-Claude will draft SQL that references the shared `shared_ecosystem`
-schema and uses `sector_primary = 'ICT'` and `stage = 'SEED'`. Run it
-via the Snowflake MCP (`/run` the query or paste into Snowsight).
+1. **Claude writes the SQL.** In Claude Code:
+   > "Write a Snowflake query that returns the count of seed-stage deals
+   > and median round size for Quebec ICT companies in 2024. Use the
+   > taxonomy codes from `taxonomy/sectors.yaml` and stage codes from
+   > `taxonomy/stages.yaml`. Aggregate only — don't return company-level
+   > rows. Save it to
+   > `pipelines/validation/diagnostics/Q_seed_ict_2024.sql`."
 
-**Output:** probably a number, maybe a quick chart. Save any CSV
-exports to `data/` (gitignored).
+2. **You run it in Snowsight.** Open Snowsight, set your warehouse,
+   paste the SQL (or open the saved file), run it. Save the result grid
+   as CSV to `data/outputs/scratch-rc-seed-ict-2024-YYYYMMDD/seed_ict.csv`.
+   That directory is gitignored — the raw results stay on your machine.
+
+3. **Claude reads the CSV.** Back in Claude Code:
+   > "Here's the output of the seed-ICT query:
+   > @data/outputs/scratch-rc-seed-ict-2024-YYYYMMDD/seed_ict.csv
+   > Summarize the aggregate finding in 2-3 sentences."
+
+4. **Decide what's worth keeping.** The SQL file is committable
+   (code is always fine). The CSV is not. An aggregate finding can
+   be promoted to an insight (see Scenario D).
 
 **When you're done, decide:**
 
@@ -135,8 +146,10 @@ git checkout -b pipeline/fix-accented-name-matching
 
 **Test before merging:** Claude can write or update a smoke test under
 `pipelines/validation/tests/`. For SQL changes that affect the registry,
-re-run `80_consolidated_startup_registry.sql` and check the validation
-queries at the bottom.
+re-run `80_consolidated_startup_registry.sql` in Snowsight yourself
+(Claude can't run it) and check the validation queries at the bottom.
+Save the validation output as CSV and share it back with Claude for
+review.
 
 **PR:** one other contributor with technical context reviews. The PR
 body should state what changed, why, and what re-ran to verify.

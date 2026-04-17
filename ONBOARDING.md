@@ -149,41 +149,31 @@ You should see three checks pass (data files, file size, taxonomy).
 
 ---
 
-## Step 6 — Configure Snowflake access via MCP
+## Step 6 — Confirm Snowflake access (via Snowsight, not MCP)
 
-This lets Claude Code query the shared Snowflake instance on your
-behalf, using your credentials.
+**Current operating mode: Claude Code does NOT query Snowflake
+directly.** There is no wired MCP server yet. You run queries manually
+in Snowsight using your org's credentials, save the results as CSV to
+the local `data/` directory, and hand the aggregates back to Claude
+Code for analysis.
 
-**Important caveat (April 2026):** there is no official Anthropic
-Snowflake MCP server yet. The partner orgs have agreed on a community
-MCP server — ask your internal lead for the current recommendation and
-install path. The MCP Registry at
-`https://api.anthropic.com/mcp-registry/docs` lists current options.
+This is intentional: it keeps credentials out of Claude sessions and
+keeps record-level results on your machine, not in any shared context.
 
-Once you have the server path, add it to `.claude/settings.local.json`
-in the repo root (this file is gitignored, so your credentials stay on
-your machine):
+**What to verify today:**
 
-```json
-{
-  "mcpServers": {
-    "snowflake": {
-      "command": "node",
-      "args": ["/absolute/path/to/snowflake-mcp-server.js"],
-      "env": {
-        "SNOWFLAKE_ACCOUNT": "your-account",
-        "SNOWFLAKE_USER": "your-user",
-        "SNOWFLAKE_ROLE": "your-role",
-        "SNOWFLAKE_WAREHOUSE": "your-warehouse",
-        "SNOWFLAKE_DATABASE": "shared_ecosystem"
-      }
-    }
-  }
-}
-```
+1. You can log into Snowsight with your org's SSO or user/password.
+2. You can see the `shared_ecosystem` database and the schema(s) your
+   org uses (`qt_schema`, `rc_schema`, or `ciq_schema`).
+3. You have a warehouse you can use to run queries.
 
-**Never commit credentials.** If you accidentally stage the settings
-file, unstage with `git reset HEAD .claude/settings.local.json`.
+If any of those fail, ping your internal data lead — the repo can't
+help you past this point without Snowflake access.
+
+**Future state:** once the three orgs agree on a Snowflake MCP server,
+we'll wire it up and update this section. Until then, the workflow is
+"Claude writes SQL → you run it → you share the aggregate back." See
+`skills/snowflake-query.md` for the full handoff loop.
 
 ---
 
@@ -203,9 +193,12 @@ In the Claude Code session, run:
    not, exit and restart from the repo root.
 2. **Ask a trivial question** — try: "Summarize what this repo is for
    in two sentences." Claude should answer using the repo context.
-3. **Check your Snowflake MCP is live** — try: "List the schemas in the
-   shared_ecosystem database." If the MCP is wired correctly, Claude
-   will run a query and return results. If not, check Step 6.
+3. **Exercise the handoff loop** — try: "Write a Snowflake query that
+   returns the count of companies in `shared_ecosystem.qt_schema.companies`
+   broken down by sector code. Use the taxonomy codes from
+   `taxonomy/sectors.yaml`." Claude should produce SQL. You then open
+   Snowsight, paste it, run it, save the CSV, and continue the chat
+   with Claude. This is the pattern you'll use daily.
 
 Make your first scratch branch:
 
@@ -249,7 +242,7 @@ rm onboarding-check.txt
 |---------|-----|
 | "Claude doesn't seem to know about the project" | Run `/memory`. If `CLAUDE.md` isn't listed, restart Claude Code from the repo root. |
 | "Permission prompt every time I run `git` or `python`" | Normal on first use. Approve, or pre-approve in `.claude/settings.local.json`. |
-| "Snowflake MCP isn't connecting" | Credentials must be inside the `env` block of settings.local.json, not in your shell profile. Path must be absolute. |
+| "How do I query Snowflake from Claude Code?" | You don't — yet. Claude writes the SQL, you run it in Snowsight, save the CSV to `data/`, and share the aggregate back with Claude. See `skills/snowflake-query.md`. |
 | "Pre-commit blocked my commit" | Read the error. Usually you've staged a CSV outside `public-data/`. Move the file or unstage it. |
 | "I committed a credential by mistake" | **Do not push.** Run `git reset HEAD~1` if it's the most recent commit, then rotate the credential anyway. If already pushed, alert the repo admin immediately. |
 

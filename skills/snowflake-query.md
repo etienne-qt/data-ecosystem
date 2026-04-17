@@ -10,7 +10,19 @@ This skill teaches you how to query the shared Snowflake instance using the conv
 - Validating data quality across sources
 
 ## Connection
-Snowflake access is configured locally via MCP. Each analyst connects with their org's credentials. The shared database is `shared_ecosystem` with schemas per org (see `docs/snowflake-schemas.md`).
+
+**Current operating mode (April 2026): Claude Code does NOT connect directly to Snowflake.** There is no wired MCP server yet. The workflow is:
+
+1. Claude Code writes the SQL in a file under `pipelines/` or inline in the chat.
+2. The human analyst runs the SQL in Snowsight (or `snowsql`) using their own credentials.
+3. The analyst saves query results as CSV to the local `data/` directory.
+4. The analyst hands the CSV (or a summary) back to Claude Code for interpretation.
+
+This is the same code-generation pattern Quebec Tech has used internally for months. It keeps credentials out of the repo and out of Claude sessions, and it keeps raw record-level results on the analyst's machine rather than in any shared context.
+
+**Future state:** once a vetted Snowflake MCP server is chosen and wired in, Claude will be able to run queries directly. Until then, assume Snowflake is out-of-band.
+
+The shared database is `shared_ecosystem` with schemas per org (see `docs/snowflake-schemas.md`).
 
 ## Query conventions
 
@@ -119,3 +131,14 @@ GROUP BY 1, 2;
 - **For committed insights:** aggregate and apply the 5-record minimum threshold
 - **For pipeline scripts:** the script itself is committable; the data it produces stays local or in Snowflake
 - **Never embed query results as raw data in committed files** — extract the aggregate finding and format as an insight
+
+## The handoff loop (until MCP is wired)
+
+A typical round-trip:
+
+1. **Claude writes the query.** It lands in `pipelines/validation/diagnostics/Qn_<question>.sql` if it's a one-off investigation, or in `pipelines/transforms/` / `pipelines/enrichment/` if it's part of the pipeline. Commit the SQL file on your working branch so reviewers see the query that produced a finding.
+2. **Analyst runs it in Snowsight.** Paste the SQL, check the warehouse, run each section, save each result grid as CSV to `data/outputs/<branch-slug>-YYYYMMDD/`.
+3. **Claude reads the CSV.** Paste the CSV content into the chat (small files) or reference the path (`@data/outputs/.../file.csv`) and ask Claude to summarize or produce the insight.
+4. **Promote the finding.** If it's worth keeping, Claude drafts the insight markdown following `skills/insight-extractor.md`. The insight commits; the CSV stays in `data/`.
+
+Keep SQL files read-only when they're diagnostics (`pipelines/validation/diagnostics/`). Transforms are the only layer that writes tables.

@@ -39,7 +39,12 @@ If you're using Claude Code (recommended), the repo is already configured to pro
 - `skills/` — shared skills that teach Claude Code our patterns
 - `taxonomy/` — sector codes, stage definitions, startup criteria
 
-To connect Claude Code to your Snowflake account, configure your local MCP settings. In your Claude Code config (usually `~/.claude/settings.json` or your local project `.claude/settings.local.json`):
+**Snowflake access — current mode (April 2026).** Claude Code does NOT query Snowflake directly yet. The workflow is: Claude writes SQL into a file under `pipelines/`, you run it in Snowsight, save the CSV to `data/` (gitignored), and share the aggregate back with Claude for analysis. This is the same code-generation pattern Quebec Tech has used internally. See `skills/snowflake-query.md` for the full handoff loop and `ONBOARDING.md` Step 6 for what to verify on day 1.
+
+**Future state.** Once the three orgs pick a Snowflake MCP server and wire it up, Claude will be able to query directly. The MCP config at that point will go in `.claude/settings.local.json` (gitignored) with credentials in the `env` block, never hardcoded. Until then, the MCP section below is aspirational.
+
+<details>
+<summary>Aspirational MCP config (not active yet)</summary>
 
 ```json
 {
@@ -56,7 +61,7 @@ To connect Claude Code to your Snowflake account, configure your local MCP setti
 }
 ```
 
-This gives Claude Code access to Snowflake with your org's credentials while using the shared skills and taxonomy from the repo.
+</details>
 
 ### 4. Install pre-commit hooks
 
