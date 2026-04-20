@@ -2,8 +2,10 @@
 
 **Statut:** Document de planification pré-analyse
 **Auteur:** Étienne Bernard (QT — Data & Analytics)
-**Version:** v0.1 (2026-04-17)
-**Audience cible du rapport final:** décideurs publics (politiciens, conseillers), équipes de politique innovation, avec les orgs partenaires (QT / RC / CIQ) comme audience secondaire.
+**Version:** v0.2 (2026-04-17) — mise à jour post-cadrage
+**Audience cible du rapport final:** **grand public**. Registre accessible, visuels dominants, jargon minimum, exemples concrets de compagnies québécoises tout au long. Les partenaires co-signataires et les décideurs publics forment l'audience secondaire.
+**Co-signataires:** **Quebec Tech + Réseau Capital** (confirmés), **CIQ** (en discussion).
+**Date cible:** **mi-juillet 2026** (avant la pause estivale).
 
 ---
 
@@ -20,11 +22,14 @@ Ce Day Zero deck identifie **toutes les slides envisagées** pour le rapport fin
 
 Pas de données finales ni de visuels à ce stade. L'objectif est d'aligner la structure et de repérer les trous à combler avant de lancer l'analyse en profondeur.
 
-**Hypothèses de cadrage** (à valider) :
-- **Scope** = DEEPTECH complet par `taxonomy/sectors.yaml`. Inclut photonique, quantique, semi-conducteurs, robotique, spatial, matériaux avancés, biotech-avec-hardware, MedTech. Exclut pure SaaS/AI.
-- **Audience primaire** = décideurs publics avant cycle électoral (fenêtre automne 2026).
-- **Benchmarks** = QC vs Ontario principalement; international en appoint (Suède, Pays-Bas, Israël).
-- **Longueur cible** = ~50 slides (exécutif + détaillé).
+**Document de référence associé:** `analysis/taxonomy-and-definitions.md` — décompose en 9 piliers le périmètre "deep tech large", définit chacun, liste les signaux de classification (mots-clés + CAE), les exemples publics québécois et les caveats. Le deck s'y réfère plutôt que de dupliquer.
+
+**Cadrage arrêté (2026-04-17):**
+- **Scope** = DEEPTECH large — 9 piliers (photonique, quantique, semi, robotique, spatial, matériaux, medtech/biotech-hw, cleantech-hw, agri-tech-hw). Voir `analysis/taxonomy-and-definitions.md`.
+- **Audience primaire** = **grand public**. Ton accessible, story-first, densité visuelle élevée.
+- **Benchmarks** = **8 régions** groupées par archétype (voir Section 5). Petits champions (SE, IL, SG), politique industrielle (KR), grandes économies (DE, US), émergent (PL), domestique (reste du Canada).
+- **Co-signature** = QT + RC + possiblement CIQ.
+- **Longueur cible** = ~45 slides (trim de 50 → 45 pour grand public — plus ciblé, moins dense).
 
 ---
 
@@ -32,14 +37,16 @@ Pas de données finales ni de visuels à ce stade. L'objectif est d'aligner la s
 
 | Section | Slides | Focus |
 |---------|--------|-------|
-| 1. Cadrage | 1–5 | Cover, TL;DR, pourquoi maintenant, scope, méthodo en un clin d'œil |
-| 2. Portrait | 6–12 | Combien, quoi, où, depuis quand, quelle taille |
-| 3. Dynamiques | 13–20 | Taux de formation, cohortes récentes, financement, sorties |
-| 4. Acteurs | 21–26 | Institutions, capital, accélérateurs, universités, talent |
-| 5. Benchmarks | 27–31 | QC vs ON, Canada, pairs internationaux |
-| 6. Défis & lacunes | 32–36 | Scaling, capital, talent, supply chain, gouvernance |
-| 7. Recommandations | 37–42 | Instruments de politique (placeholders) |
-| 8. Annexe | 43–50 | Sources, méthodo détaillée, taxonomie, limites, glossaire |
+| 1. Cadrage | 1–5 | Cover, TL;DR, pourquoi maintenant, définitions (4 + 4bis), méthodo express |
+| 2. Portrait | 6–12 | Combien, quoi, où, depuis quand, quelle taille, anchors |
+| 3. Dynamiques | 13–20 | Taux de formation, cohorte post-2024, SW vs HW, financement, sorties, trajectoires |
+| 4. Acteurs | 21–26 | Institutions, financement public, VC/PE, accélérateurs, universités, talent |
+| 5. Benchmarks | 27–34 | Panorama 8 régions, petits champions, Corée, DE+US, Pologne, QC vs Canada, politique publique, capital |
+| 6. Défis & lacunes | 35–39 | Scaling, capex, talent, supply chain, fragmentation |
+| 7. Recommandations | 40–45 | Principes + 4 recos (placeholders) + roadmap |
+| 8. Annexe | 46–52 | Sources, méthodo détaillée (3x), taxonomie, limites, reproductibilité, glossaire |
+
+> **Note sur la numérotation:** les numéros ci-dessus sont **indicatifs** et seront resserrés en phase de production (`.pptx`). La renumérotation propre se fera une fois le contenu arrêté. Les titres de section sont stables.
 
 ---
 
@@ -55,19 +62,23 @@ Pas de données finales ni de visuels à ce stade. L'objectif est d'aligner la s
 
 ---
 
-## Slide 2 — TL;DR
+## Slide 2 — Ce qu'il faut retenir (TL;DR grand public)
 
-**Contenu:** 5 bullets clés (les "messages" du rapport). Draft à itérer :
+**Contenu:** 5 messages en phrases simples, ton accessible pour lecteur non-expert. Draft :
 
-1. Environ **[X] compagnies hard-tech / deep-tech** actives au Québec en 2026, dont **[Y]** incorporées depuis 2024.
-2. **Soubresaut de formation 2025** (~18/trimestre vs ~12 pré-COVID), mais **photonique pure reste plate** — la croissance vient du matériel adjacent et quantique émergent.
-3. **Contraste marqué avec le SaaS/AI** post-GenAI : création software 2.2x vs création hardware stagnante. Le vent GenAI ne porte pas le hard-tech.
-4. **Goulot d'étranglement principal = scaling**, pas la formation. Les capacités d'incorporation existent; le passage à l'échelle manque de capital long-horizon et de demande domestique.
-5. **[Recommandation phare]** — à formuler après analyse.
+1. **Le Québec compte environ [X] compagnies deep-tech** — des entreprises qui fabriquent des technologies avancées (lasers, puces, robots, dispositifs médicaux, équipement spatial). C'est un bassin discret mais réel, ancré par des noms comme l'INO, EXFO, MDA, Kinova, Nord Quantique.
+
+2. **Un réveil depuis 2024, mais modeste.** Environ 18 nouvelles compagnies par trimestre en 2025–début 2026, contre 12 avant la COVID. Un plus, mais les volumes absolus restent petits et la photonique traditionnelle n'a pas décollé — ce sont le quantique et le matériel adjacent qui bougent.
+
+3. **Le vent GenAI n'a pas porté le matériel.** Depuis 2022, la création de compagnies logicielles-IA a doublé au Québec pendant que la création hardware restait plate. Les deux mondes suivent des trajectoires opposées.
+
+4. **Le vrai problème n'est pas de créer, c'est de faire grandir.** Les compagnies naissent, peu atteignent 50+ employés ou 10M$ de revenus. Le capital patient manque, la demande domestique est diffuse, les opérateurs expérimentés sont rares.
+
+5. **[Recommandation phare à formuler après analyse]** — des leviers existent : instruments de capital dédiés, programmes de procurement stratégique, immigration accélérée pour opérateurs, renforcement des anchors institutionnels.
 
 **Source material:** Synthèse post-analyse. Seule slide qu'on finalise à la toute fin.
 
-**Status:** Squelette — à réécrire après section 7.
+**Status:** Squelette pour cadrage; à réécrire après section 7. Ton délibérément grand-public : chaque message doit être compréhensible par un lecteur non-technique.
 
 ---
 
@@ -87,49 +98,79 @@ Pas de données finales ni de visuels à ce stade. L'objectif est d'aligner la s
 
 ---
 
-## Slide 4 — Scope et définitions
+## Slide 4 — Deep tech, hard tech : de quoi parle-t-on ?
 
-**Question analytique:** Qu'est-ce qu'on appelle "hard tech" et "deep tech" dans ce rapport ?
+**Question analytique:** Qu'est-ce que ce rapport appelle "deep tech" et "hard tech" ? Comment distingue-t-on ces compagnies des autres start-ups technologiques ?
 
-**Contenu:**
-- **Deep tech** = compagnies bâties sur une avancée scientifique ou d'ingénierie substantielle (par `taxonomy/sectors.yaml`, code `DEEPTECH`).
-- **Inclus:**
-  - Photonique, optique et imagerie (fibre optique, lasers, capteurs optiques, thermal/infrared)
-  - Quantique (calcul, communications, capteurs)
-  - Semi-conducteurs (conception, fabrication, test)
-  - Robotique et systèmes autonomes
-  - Technologies spatiales
-  - Matériaux avancés (nanotech, composites, 2D)
-  - Biotech avec plateforme hardware (dispositifs médicaux logiciel+hardware, diagnostics)
-  - MedTech
-- **Exclus explicitement:**
-  - Pure SaaS / plateformes software
-  - AI/ML appliquée sans composante hardware (classée `AI` dans la taxonomie)
-  - Fintech, consommation, contenu
-  - Consulting technologique
+**Contenu (accessible grand public):**
 
-**Visuel (placeholder):** diagramme de Venn ou tableau 2-colonnes "Inclus / Exclus" avec exemples de compagnies publiques de chaque côté.
+Deux définitions à ancrer :
 
-**Status:** Définition stabilisée. Besoin d'exemples publics de compagnies à lister.
+- **Deep tech** = entreprise bâtie sur une **avancée scientifique ou d'ingénierie substantielle** (souvent issue d'un laboratoire universitaire ou industriel). Cycles de R-D longs, forte intensité de capital, barrières à l'entrée défensives.
+- **Hard tech** = sous-ensemble du deep tech avec un **produit physique au cœur** : hardware, dispositif, matériau, équipement. Exclut le deep tech purement logiciel.
+
+**Ce rapport couvre le deep tech large** (hard tech + deep tech à composante matérielle forte), organisé en **9 piliers** détaillés slide 4bis.
+
+**Ce qui est exclu:** pure SaaS, IA appliquée sans hardware, fintech, consommation, médias, consulting tech.
+
+**Renvoi:** "Définitions détaillées par pilier en annexe, slide 45. Document complet : `analysis/taxonomy-and-definitions.md`."
+
+**Visuel (placeholder):** un grand schéma en cercles concentriques (deep tech large → hard tech → 9 piliers dedans) avec, à côté, une liste courte "INCLUS / EXCLU" et 3 exemples publics québécois par colonne.
+
+**Status:** Définitions arrêtées en v0.1; prêtes à visualiser.
 
 ---
 
-## Slide 5 — Méthodologie en un clin d'œil
+## Slide 4bis — Les 9 piliers du deep tech québécois
+
+**Question analytique:** Comment le deep tech québécois se décompose-t-il concrètement ?
+
+**Contenu (grand public):**
+
+Table en une slide, 9 lignes. Pour chaque pilier :
+
+| Pilier | En une phrase | Un exemple public québécois |
+|--------|---------------|------------------------------|
+| Photonique et optique | Technologies de la lumière (fibre, laser, imagerie) | EXFO (instrumentation fibre) |
+| Quantique | Ordinateurs, capteurs et communications fondés sur la physique quantique | Nord Quantique (Sherbrooke) |
+| Semi-conducteurs | Conception et test de puces électroniques | IBM Bromont (ancre industrielle) |
+| Robotique et systèmes autonomes | Robots, drones, véhicules autonomes | Kinova (bras robotiques) |
+| Technologies spatiales | Satellites, propulsion, télédétection | MDA (robotique spatiale) |
+| Matériaux avancés | Nanomatériaux, composites, alliages spéciaux | NanoXplore (graphène) |
+| MedTech et biotech-hardware | Dispositifs médicaux, diagnostics, bioprocessing | Medtronic (site QC), Imagia |
+| Cleantech hardware | Batteries, VE, captation carbone physique | Lion Electric (camions électriques) |
+| Agri-tech avec hardware | Capteurs agricoles, drones, équipement précision | Semios (pièges intelligents) |
+
+**Renvoi:** "Définitions opérationnelles et mots-clés en `analysis/taxonomy-and-definitions.md`."
+
+**Visuel (placeholder):** grille 3×3 de 9 tuiles, chacune avec une icône représentative, le nom du pilier, 1 phrase-définition, et le logo/nom d'une compagnie publique.
+
+**Takeaway attendu:** Le lecteur comprend en 30 secondes la diversité des piliers et peut associer chaque pilier à un nom concret — démystifie la notion de "deep tech" abstraite.
+
+**Status:** Contenu prêt (du document taxonomie); viz à construire.
+
+---
+
+## Slide 5 — Comment on a fait (méthodologie en 30 secondes)
 
 **Question analytique:** Comment les chiffres ont-ils été obtenus ? Quelle confiance peut-on y accorder ?
 
-**Contenu:** 3-4 lignes pour l'audience non-technique :
+**Contenu (grand public, 4 lignes simples):**
 
-1. **Univers principal:** REQ (entreprises en fonction) + registre startup QT (`GOLD.STARTUP_REGISTRY`).
-2. **Classification hybride:** mots-clés sur description d'activité (haute confiance) + codes CAE (confiance plus basse). **~73 % des classifications historiques reposent sur le code CAE seul**, ce qui mérite prudence sur les trajectoires fines.
-3. **Financement:** données PitchBook via Réseau Capital (si accord obtenu) + annonces publiques.
-4. **Bases nominatives non accessibles:** INO, MEDTEQ+, Écotech Québec — demandes en cours.
+1. **On part du registre des entreprises du Québec (REQ)** — toutes les compagnies incorporées, avec leur description d'activité et code économique.
+2. **On classe en deep tech avec deux filets:** des mots-clés précis sur la description (haute confiance) + des codes économiques (confiance plus large). On accepte un peu de bruit pour ne pas manquer les compagnies qui n'ont pas rempli leur description.
+3. **On croise avec Dealroom (Quebec Tech) et PitchBook (Réseau Capital)** pour rattraper les compagnies incorporées au fédéral et compléter les données de financement.
+4. **Trois niveaux de confiance:** HAUTE (mots-clés validés + codes cohérents), MOYENNE (un des deux signaux), BASSE (code économique seul — on cite mais on flagge).
 
-**Renvoi:** "Méthodologie détaillée en annexe, slides 43–47."
+**Caveats-pédagogie:**
+- Les compagnies **incorporées au fédéral** (CBCA) n'apparaissent pas dans le REQ — angle mort à combler via Dealroom et PitchBook.
+- Environ **73 % des classifications historiques** dans nos analyses photonique/matériel reposaient sur le code économique seul — d'où l'importance d'annoncer les plages de confiance.
 
-**Visuel (placeholder):** infographie simple en 4 boîtes (Sources → Classification → Agrégats → Rapport).
+**Renvoi:** "Méthodologie détaillée en annexe, slides 44–47. Décomposition complète des piliers et signaux : `analysis/taxonomy-and-definitions.md`."
 
-**Status:** Texte prêt; besoin de confirmer accès PitchBook.
+**Visuel (placeholder):** infographie horizontale en 4 étapes (REQ → classification hybride → croisement sources → fiabilité tiers) avec icônes.
+
+**Status:** Texte prêt; viz à construire. Dépendance critique : accord formel avec RC pour données PitchBook — à obtenir dans les 2 premières semaines, sinon version dégradée.
 
 ---
 
@@ -561,103 +602,187 @@ Pas de données finales ni de visuels à ce stade. L'objectif est d'aligner la s
 
 ---
 
-# Section 5 — Benchmarks
+# Section 5 — Benchmarks (8 régions, par archétypes)
 
-## Slide 27 — Québec vs Ontario
-
-**Question analytique:** Comment l'écosystème hard-tech québécois se compare-t-il à celui de l'Ontario (Toronto + Waterloo) en taille, composition, financement ?
-
-**Données / sources:**
-- Ontario Business Registry si accessible (équivalent REQ) — à vérifier.
-- Rapports Toronto Global, MaRS, Communitech.
-- Dealroom / PitchBook Ontario si accès RC.
-
-**Visuel (placeholder):** tableau comparatif : compagnies, financement, sorties, universités, anchors, instruments publics.
-
-**Takeaway attendu:** **Ontario plus gros en volume absolu** (population 1.8x), mais **densité Québec comparable ou supérieure** dans plusieurs verticales (photonique, quantique, cleantech). Ontario avance plus vite sur semi (WaterlooFabX, potentiel).
-
-**Caveats:**
-- Bases de données provinciales asymétriques.
-- Comparaison "toutes choses égales" difficile.
-
-**Status:** Recherche à faire.
+> **Cadrage:** 8 régions de comparaison choisies pour leur diversité d'archétypes.
+>
+> | Archétype | Régions | Enseignement attendu |
+> |-----------|---------|----------------------|
+> | Petits champions deep-tech | Suède (SE), Israël (IL), Singapour (SG) | Ce qu'une petite économie peut accomplir avec focus |
+> | Politique industrielle ciblée | Corée du Sud (KR) | Coordination état-industrie sur semi/matériaux |
+> | Grandes économies anchors | Allemagne (DE), États-Unis (US) | CHIPS Act, Mittelstand, référentiels de politique |
+> | Émergent / transitionnel | Pologne (PL) | Trajectoire de rattrapage post-intégration EU |
+> | Domestique | Reste du Canada (ON + autres) | Baseline provincial-fédéral |
+>
+> Comparaisons normalisées par habitant quand pertinent. Comparaisons absolues quand l'échelle industrielle importe (semi-conducteurs, spatial).
 
 ---
 
-## Slide 28 — Québec vs Canada (total)
+## Slide 27 — Panorama des 8 benchmarks en une page
 
-**Question analytique:** Quelle part du hard-tech canadien est québécoise ?
+**Question analytique:** Comment le Québec se positionne-t-il globalement face à ces 8 régions ?
 
 **Données / sources:**
-- StatCan (comptes R-D industrielle par province).
-- ISED Key Small Business Statistics (`insights/reports-external/ised-ksbs-2025.md`).
-- GSER / StartupBlink rankings.
+- GSER 2024–2025 (`insights/reports-external/gser-2025.md`)
+- StartupBlink Global 2025 (`insights/reports-external/startupblink-2025.md`)
+- OCDE statistiques R-D et innovation
+- Rapports nationaux : Vinnova (SE), Israel Innovation Authority (IL), A*STAR (SG), KISTEP (KR), BMWK (DE), NSF (US), Narodowe Centrum Badań (PL)
+- ISED + StatCan pour le Canada
 
-**Visuel (placeholder):** diagramme en donut "parts de marché" des provinces dans le hard-tech canadien par indicateurs-clés.
+**Visuel (placeholder):** grand tableau/heatmap 8 régions + QC × 6 indicateurs-clés — PIB/habitant, R-D privée % PIB, compagnies deep-tech/million d'habitants, capital deep-tech levé par habitant, universités top-200 (ARWU), index politique industrielle (qualitatif).
 
-**Takeaway attendu:** Québec = ~20–25 % du PIB canadien mais **surreprésentation en photonique, quantique, cleantech, aérospatial**.
+**Takeaway attendu:** Le Québec a les **ressources institutionnelles** (universités, anchors) de rivaliser avec les petits champions, mais le **volume de formation et le capital** restent sous le seuil critique. Position structurellement intermédiaire.
 
 **Caveats:**
-- Définitions StatCan peuvent différer de nos définitions taxonomiques.
+- Comparabilité limitée par différences définitionnelles (qu'est-ce que "deep tech" selon chaque source).
+- Certaines données nationales ont un recul de 1–2 ans.
 
-**Status:** Données publiques prêtes.
+**Status:** Collecte documentaire à lancer; architecture du tableau à finaliser.
 
 ---
 
-## Slide 29 — Québec vs pairs internationaux
+## Slide 28 — Les petits champions deep-tech : Suède, Israël, Singapour
 
-**Question analytique:** Comment le Québec se compare-t-il à d'autres juridictions de taille comparable avec fort focus deep-tech (Suède, Pays-Bas, Israël, Singapour) ?
+**Question analytique:** Que font ces trois petites économies que le Québec n'a pas encore fait, et qu'est-ce qu'elles ont en commun ?
 
 **Données / sources:**
-- GSER 2024–2025, StartupBlink Global 2025 (`insights/reports-external/gser-2025.md`, `startupblink-2025.md`).
-- Rapports nationaux de chaque pays quand accessibles.
+- **Suède:** Vinnova reports, RISE, SEK Deep Tech Fund, Chalmers Ventures — ancrage industriel (Ericsson, AstraZeneca) + spinoffs universitaires, capital de croissance public.
+- **Israël:** Israel Innovation Authority, Technion spinoffs, Yozma model legacy, militarisation-to-civilian pipeline (8200, Rafael) — conversion recherche militaire → civil, corporate VC actifs.
+- **Singapour:** A*STAR, NRF, SGInnovate, Temasek — délibération étatique top-down, ciblage sous-sectoriel explicite (semi, biotech).
 
-**Visuel (placeholder):** radar chart ou tableau normalisé par habitant : compagnies deep-tech, capital levé, universités top-100, exits.
+**Visuel (placeholder):** trois colonnes parallèles — un "portrait" par pays (compagnies deep-tech, capital, instruments publics-phares, leçon tirée). En bas, ligne commune : "Ce que les 3 partagent."
 
-**Takeaway attendu:** **Québec comparable à Pays-Bas / Suède en photonique**, **loin derrière Israël en quantique/semi**, **loin derrière Singapour en politiques industrielles délibérées**.
+**Takeaway attendu:** Les trois réussissent par **combinaison de 3 ingrédients** — (1) anchors industriels forts, (2) capital public de croissance (pas seulement seed), (3) demande domestique captive (défense, santé publique, fonds souverain). Le Québec a le premier, les autres restent à construire.
 
 **Caveats:**
-- Comparabilité limitée par différences définitionnelles.
-- Rapports internationaux ont leurs propres biais.
+- Contextes politiques et sécuritaires très différents (Israël surtout) — pas tout est transposable.
 
-**Status:** Lectures à synthétiser.
+**Status:** Recherche documentaire à faire; angle "3 ingrédients communs" à tester avec analyse.
 
 ---
 
-## Slide 30 — CHIPS Act et équivalents
+## Slide 29 — Politique industrielle ciblée : Corée du Sud
 
-**Question analytique:** Quels effets observés des grandes politiques industrielles récentes (US CHIPS Act 2022, EU Chips Act 2023, stratégie quantique CA 2023) ? Qu'est-ce qui manque au Canada/Québec ?
+**Question analytique:** Comment la Corée a-t-elle réussi à devenir une puissance semi/matériaux en une génération, et qu'est-ce qui est transposable à l'échelle québécoise ?
 
 **Données / sources:**
-- Publications publiques : White House CHIPS implementation reports, European Commission dashboards, Conseil consultatif canadien sur les semiconducteurs.
+- KISTEP, K-Chips Act (2023), Samsung/SK Hynix public disclosures, KDB reports
+- Littérature sur le modèle des "chaebols" et l'évolution vers deep tech
 
-**Visuel (placeholder):** timeline des programmes + montants engagés + effets mesurés après 3 ans; colonne "Canada" en grande partie vide.
+**Visuel (placeholder):** timeline 1980–2025 des dépenses R-D publiques coréennes + événements-clés; encart "chiffres-clés" comparés au Canada.
 
-**Takeaway attendu:** **Le Canada n'a pas de CHIPS Act.** La Stratégie quantique canadienne (2023, 360M$) est insuffisante en taille et en ciblage matériel. Le Québec pourrait aller plus loin unilatéralement en semi/photonique.
+**Takeaway attendu:** Le modèle coréen repose sur **coordination top-down massive + champions nationaux + éducation technique ciblée**. Transposable au Québec à échelle réduite : ciblage sous-sectoriel (quantique, photonique), partenariats publics-privés structurants, financement long-horizon dédié.
 
 **Caveats:**
-- Effets économiques des Acts n'ont que 3 ans de recul.
+- Échelle et contexte culturel très différents.
+- La composante "champion national" est controversée démocratiquement.
 
 **Status:** Recherche documentaire à faire.
 
 ---
 
-## Slide 31 — Capital availability par stade
+## Slide 30 — Grandes économies : Allemagne et États-Unis
 
-**Question analytique:** À quels stades de financement le Québec souffre-t-il le plus en hard-tech vs pairs ?
+**Question analytique:** Que retenir des deux plus gros modèles de politique deep-tech (US CHIPS Act, DE Mittelstand + SprunD/DTEC), et qu'est-ce qui survit à l'adaptation pour le QC ?
 
 **Données / sources:**
-- PitchBook / CVCA via RC — agrégats par stade.
-- Stratification seed / A / B / growth pour hard-tech QC, compared to ON et US benchmark.
+- **US:** White House CHIPS implementation reports (2022–), NSF, NIST, état d'avancement des fabs annoncées, Inflation Reduction Act cleantech components.
+- **DE:** BMWK programmes, SPRIND (Bundesagentur für Sprunginnovationen), DTEC.Bw, Mittelstand deep-tech (Carl Zeiss, Trumpf).
 
-**Visuel (placeholder):** 4 barres par région (Seed, A, B, Growth) — QC vs ON vs US moyen.
+**Visuel (placeholder):** deux colonnes — US (approche "big bet subventions") et DE (approche "dense réseau mittelstand"). Tableau comparatif et, en bas, "Ce que le Québec peut importer à sa propre échelle."
 
-**Takeaway attendu:** **Seed correct, A correct, B et Growth critiquement manquants** pour hard-tech. Point structurel déjà connu pour tech en général; hard-tech l'amplifie.
+**Takeaway attendu:** **Ni le modèle US (52B$ CHIPS) ni le Mittelstand allemand ne se reproduisent à l'identique**, mais deux leçons s'appliquent : (1) ciblage explicite d'infrastructures manquantes (US: fab domestique), (2) financement institutionnel de long-terme du réseau existant (DE: Fraunhofer). Le Québec peut faire les deux à échelle réduite — CRIQ et INO sont les Fraunhofer canadiens potentiels.
+
+**Caveats:**
+- US CHIPS Act n'a que 3 ans de recul — effets économiques encore débattus.
+- Le Mittelstand est le produit d'un siècle — pas reproductible rapidement, mais la logique de long-termisme l'est.
+
+**Status:** Recherche documentaire à faire; leçons transposables à raffiner avec section 7.
+
+---
+
+## Slide 31 — Émergent : Pologne (cas de rattrapage)
+
+**Question analytique:** Une économie européenne de rattrapage post-intégration EU peut-elle inspirer une trajectoire d'accélération du Québec ?
+
+**Données / sources:**
+- Narodowe Centrum Badań i Rozwoju (NCBR) reports
+- Polish Development Fund (PFR) deep-tech initiatives
+- Données OCDE / Eurostat R-D
+
+**Visuel (placeholder):** ligne de trajectoire 2004–2025 (dépenses R-D, compagnies deep-tech) avec annotations des inflexions politiques; courbe parallèle QC pour comparaison.
+
+**Takeaway attendu:** La Pologne montre qu'une **décennie de politique industrielle cohérente** (~2015–2025) peut multiplier la base deep-tech par 3–5x. Le Québec est plus mature à la base mais a un déficit d'accélération similaire. **L'horizon temporel de transformation est une décennie, pas un mandat.**
+
+**Caveats:**
+- Fonds EU structurants (non-disponibles au Canada).
+- Contexte post-soviétique spécifique.
+
+**Status:** Recherche documentaire à faire — **angle inédit dans les rapports canadiens existants**, à traiter avec soin.
+
+---
+
+## Slide 32 — Domestique : Québec vs reste du Canada
+
+**Question analytique:** Quelle est la place du Québec dans le deep tech canadien, et où souffre-t-il par rapport à l'Ontario et la Colombie-Britannique ?
+
+**Données / sources:**
+- StatCan (comptes R-D industrielle par province)
+- ISED KSBS (`insights/reports-external/ised-ksbs-2025.md`)
+- Ontario Business Registry (équivalent REQ, accès à confirmer)
+- GSER / StartupBlink rankings nationaux
+- Rapports MaRS, Communitech (ON), BC Tech (CB)
+
+**Visuel (placeholder):** carte canadienne choroplèthe + tableau comparatif QC / ON / CB / Alberta / Atlantique sur 6 indicateurs deep-tech.
+
+**Takeaway attendu:** **Ontario plus gros en volume absolu** (population 1.8x du QC) avec cluster semi Waterloo + biotech Toronto. **QC surreprésenté en photonique, quantique, cleantech, aérospatial** par habitant. **BC forte en IA-biotech.** Le Québec a une proposition complémentaire, pas concurrente, et devrait se positionner comme **la province hardware-centric du Canada**.
+
+**Caveats:**
+- Définitions provinciales asymétriques.
+- Comparaison "toutes choses égales" difficile.
+
+**Status:** Recherche à faire; Ontario Business Registry à explorer pour équivalent-REQ.
+
+---
+
+## Slide 33 — CHIPS Act, Chips Act EU, Stratégie quantique CA : la pause canadienne
+
+**Question analytique:** Quels effets observés des grandes politiques industrielles récentes, et qu'est-ce qui manque côté canadien ?
+
+**Données / sources:**
+- White House CHIPS implementation reports + Congressional Research Service
+- European Commission Chips Act dashboards
+- Conseil consultatif canadien sur les semi-conducteurs (rapport 2023)
+- Stratégie quantique CA (2023, 360M$)
+
+**Visuel (placeholder):** timeline programmes 2020–2026 avec montants engagés et résultats à 3 ans; colonne "Canada" visiblement plus pâle et plus courte.
+
+**Takeaway attendu:** **Le Canada n'a pas de CHIPS Act.** Les instruments existants (PARI, SIF, Stratégie quantique) sont utiles mais sous-dimensionnés et dispersés. Le Québec a les leviers pour **agir unilatéralement** sur photonique et quantique, deux piliers où il a déjà une ancre institutionnelle qui manque aux autres provinces.
+
+**Caveats:**
+- Effets CHIPS Act n'ont que 3 ans — appréciation préliminaire.
+
+**Status:** Recherche documentaire à faire.
+
+---
+
+## Slide 34 — Capital par stade : QC vs pairs
+
+**Question analytique:** À quels stades de financement le Québec souffre-t-il le plus en deep-tech vs pairs directement comparables ?
+
+**Données / sources:**
+- PitchBook / CVCA via RC — agrégats par stade (critique, bloquant)
+- Stratification Seed / Série A / Série B / Growth pour deep-tech QC vs ON, US moyen, IL, SE
+
+**Visuel (placeholder):** 4 barres par région (Seed, A, B, Growth) — QC vs 3-4 régions comparables. Une seule vue synthétique.
+
+**Takeaway attendu:** **Seed correct, Série A correct, Séries B et Growth critiquement manquants** pour deep-tech au QC. Le goulot typique canadien, amplifié pour deep-tech vu l'intensité capitalistique. Le capital de croissance devient le levier-clé des recommandations.
 
 **Caveats:**
 - Stages Dealroom vs PitchBook peuvent différer — normaliser via `taxonomy/stages.yaml`.
+- Source licenciée → agrégats seulement, pas de deals nommés.
 
-**Status:** Bloquant sur accord RC.
+**Status:** **Bloquant sur accord RC.**
 
 ---
 
@@ -832,41 +957,55 @@ Pas de données finales ni de visuels à ce stade. L'objectif est d'aligner la s
 
 ---
 
-## Slide 44 — Méthodologie détaillée (1/3) — Classification
+## Slide 44 — Méthodologie détaillée (1/3) — Classification hybride
 
-**Contenu:** Description de la classification hybride keywords + CAE (stage 31), listes de signaux utilisés, scores et seuils.
+**Contenu:** Description de la classification hybride keywords + CAE au niveau opérationnel :
 
-Renvoi vers `pipelines/transforms/silver/31_req_product_classification.sql`.
+- **Signal 1 (haute confiance):** 40+ patterns keywords sur `DESC_LOWER` et `DESC_ALL` (SECTEUR_ACTIVITE_PRINCIPAL + SECONDAIRE). Mots-clés par pilier détaillés dans `analysis/taxonomy-and-definitions.md`.
+- **Signal 2 (confiance variable):** codes CAE du REGISTRE_ADRESSES — boost pour codes ciblés (2851, 3361, 3674, 3827, 3740, etc.), pénalité pour services.
+- **Filtre service:** regex d'exclusion pour "consulting", "services informatiques", "intégration", "maintenance" — 3,757 faux positifs historiques écartés.
+- **Score produit agrégé → tier:** HIGH / MEDIUM / LOW / EXCLUDED_SERVICE / NONE selon combinaison des signaux.
 
-**Status:** Référentiel prêt.
+Renvoi technique : `pipelines/transforms/silver/31_req_product_classification.sql`.
+Renvoi lisible : `analysis/taxonomy-and-definitions.md` sections 2 et 4.
 
----
-
-## Slide 45 — Méthodologie détaillée (2/3) — Matching entre sources
-
-**Contenu:** Comment les sources (REQ / Dealroom / Réseau Capital) ont été unifiées : bridge NEQ, fuzzy name matching ≥ 0.85, manual review whitelist. Taux de match observés.
-
-Renvoi vers `pipelines/transforms/entity_resolution/`.
-
-**Status:** Référentiel prêt.
+**Status:** Référentiel prêt. Besoin d'un visuel pédagogique "voyage d'une compagnie dans le classifier" pour grand public.
 
 ---
 
-## Slide 46 — Méthodologie détaillée (3/3) — Agrégats et gouvernance
+## Slide 45 — Méthodologie détaillée (2/3) — Définitions par pilier
 
-**Contenu:** Règles de gouvernance : agrégats seulement pour données licenciées, seuil minimum 5 enregistrements, pas de noms de compagnies depuis sources licensées.
+**Contenu:** Table de synthèse — pour chacun des 9 piliers, définition d'une phrase, 2-3 mots-clés principaux, codes CAE dominants, 2 exemples publics, caveats-clés. Sert de "carte de route" pour le lecteur qui veut comprendre comment une compagnie-type est classifiée.
 
-Renvoi vers `DATA-GOVERNANCE.md`.
+Renvoi complet : `analysis/taxonomy-and-definitions.md` section 2.
 
-**Status:** Référentiel prêt.
+**Visuel (placeholder):** table dense 9 lignes × 5 colonnes; tu peux zoomer au lieu de feuilleter. Design clair avec codes CAE en petit.
+
+**Status:** Contenu prêt dans le document taxonomie. Viz à construire.
 
 ---
 
-## Slide 47 — Taxonomie employée
+## Slide 46 — Méthodologie détaillée (3/3) — Matching entre sources et gouvernance
 
-**Contenu:** Résumé visuel de `taxonomy/sectors.yaml` et `taxonomy/startup-criteria.yaml` — codes, labels, hiérarchie. Rendre explicite quels codes sont dans le périmètre "deep tech" de ce rapport.
+**Contenu:** Deux parties brèves sur une slide :
 
-**Status:** Texte prêt.
+**A. Matching cross-sources:** comment REQ, Dealroom et PitchBook sont unifiés — bridge NEQ quand disponible, fuzzy name matching ≥ 0.85, manual review whitelist pour near-misses. Taux de match observés (~X %, à confirmer après rafraîchissement).
+Renvoi : `pipelines/transforms/entity_resolution/`.
+
+**B. Gouvernance des données:** rappel des règles — agrégats seulement pour sources licenciées (Dealroom, PitchBook), seuil minimum 5 enregistrements par groupe, aucun nom de compagnie attribuable à une source licenciée, sources publiques (REQ, annonces médias, sites web) citables nominativement.
+Renvoi : `DATA-GOVERNANCE.md`.
+
+**Status:** Référentiel prêt. Section pédagogique à articuler.
+
+---
+
+## Slide 47 — Taxonomie employée (vue synthétique)
+
+**Contenu:** Résumé visuel de la taxonomie ecosystem-wide (`taxonomy/sectors.yaml`) et des critères "startup" (`taxonomy/startup-criteria.yaml`). Met en évidence **quels codes** (AI exclu, DEEPTECH inclus, parties de HEALTHTECH et CLEANTECH incluses, AGRITECH partiellement inclus) **composent le périmètre de ce rapport**.
+
+**Visuel (placeholder):** arbre taxonomique 2 niveaux (parent → enfants) avec codes colorés "inclus dans ce rapport / partiellement inclus / exclu".
+
+**Status:** Données prêtes (YAML). Viz à construire.
 
 ---
 
@@ -911,33 +1050,51 @@ Renvoi vers `DATA-GOVERNANCE.md`.
 
 ---
 
-# Questions ouvertes — à trancher avant que je passe de Day 0 à analyse détaillée
+# Cadrage arrêté — résumé des décisions (2026-04-17)
 
-Avant de lancer la production des slides, voici ce que j'aimerais confirmer avec toi :
+| Question | Décision |
+|----------|----------|
+| Scope | **DEEPTECH large**, 9 piliers — photonique, quantique, semi, robotique, spatial, matériaux avancés, medtech/biotech-hw, cleantech-hw, agri-tech-hw. Voir `analysis/taxonomy-and-definitions.md`. |
+| Audience primaire | **Grand public.** Ton accessible, exemples concrets de compagnies publiques, visuel-dominant, jargon minimum. |
+| Co-signature | **Quebec Tech + Réseau Capital** confirmés. **CIQ** en discussion. |
+| Benchmarks | **8 régions** par archétypes : Suède, Israël, Singapour (petits champions); Corée (politique industrielle); Allemagne, États-Unis (grandes économies); Pologne (émergent); Reste du Canada (domestique). |
+| Recommandations | **Placeholders** dans le deck; formulation finale émergera de l'analyse (sections 2–6). |
+| Date cible | **Mi-juillet 2026.** Ambitieux compte tenu du scope — priorise le déblocage RC. |
+| Définitions | Document dédié `analysis/taxonomy-and-definitions.md` — bâti sur `taxonomy/sectors.yaml` + stage 31 classifier + messages existants. |
 
-1. **Scope DEEPTECH large OU focus hardware/photonique seulement ?**
-   J'ai proposé large (inclut quantique, robotique, biotech-hardware, spatial, matériaux). L'analyse existante `INTERNAL-hardware-photonics-req-2026` est plus étroite. Si tu veux rester cohérent avec l'analyse existante, on restreint. Si tu veux faire un rapport plus ambitieux, on élargit (mais volume de travail plus grand).
+---
 
-2. **Audience primaire confirmée ?**
-   J'ai présumé décideurs publics avant élections QC 2026. Si c'est plutôt pour un conseil d'administration, les partenaires internes, ou un public industriel, je reformule le ton et la densité.
+# Prochains jalons immédiats
 
-3. **Accord Réseau Capital sur les données de financement ?**
-   Les slides 18, 23, 31 en dépendent. Si pas d'accord RC, je dois soit les abandonner, soit les rebâtir sur annonces publiques seulement (version allégée). Je dois savoir avant de m'y engager.
+**Les points critiques à débloquer dans les 2 prochaines semaines:**
 
-4. **Benchmarks internationaux — quels pays ?**
-   Proposition : Suède, Pays-Bas, Israël. Pourquoi ces trois-là : taille d'économie comparable + deep-tech fort + données publiques disponibles. Si tu préfères un set différent (ex. Singapour, Corée du Sud, Danemark), dis-moi.
+1. **Demande formelle à Réseau Capital** pour l'accès PitchBook/CVCA (agrégats). Slides 18, 23, 34 dépendent de cet accord. Sans celui-ci, version dégradée basée sur annonces publiques seulement.
+2. **Invitation formelle au CIQ** pour co-signature et définition de l'apport (Baromètre, métriques politiques). Besoin de réponse avant publication publique du draft.
+3. **Sollicitations aux anchors institutionnels** (INO, MEDTEQ+, Écotech Québec, IREQ) pour listes de membres et validation nominative. Idéalement réponses pour fin avril.
+4. **Validation interne QT** du scope 9 piliers et du `analysis/taxonomy-and-definitions.md` — confirmer qu'on ne manque pas un pilier (ex. fusion/SMR) ou qu'on n'en inclut pas un qui n'a pas assez de masse critique.
+5. **Production de la cohorte post-2024** via Q5 diagnostic dans Snowsight — alimente slides 16 et partiellement 4bis.
 
-5. **Recommandations — démarrer avec hypothèses ou attendre l'analyse ?**
-   J'ai mis 4 placeholders (capital / talent / institutions / demande) comme hypothèses de travail. Si tu veux des recos plus spécifiques avant l'analyse (ex. lié à un programme gouvernemental précis), nomme-le et je le bâtis dedans. Sinon, on laisse émerger.
+# Jalons phase par phase
 
-6. **Co-signature QT + RC + CIQ ou QT seul ?**
-   Impact sur le ton, le processus de review, et les data partners qu'on peut solliciter. Si co-signé, il faut engager RC/CIQ dès maintenant sur leur apport.
+- **Semaines 1–2 (fin avril):** déblocage partenariats, validation taxonomie, planification viz/design.
+- **Semaines 3–6 (mai):** analyses principales (sections 2–4), cohorte post-2024, trajectoires par pilier.
+- **Semaines 5–9 (fin mai–début juin):** benchmarks 8 régions — recherche documentaire, synthèse par archétype.
+- **Semaines 7–10 (juin):** draft v1 narratif, visualisations, section 6 défis, premières hypothèses recommandations.
+- **Semaines 10–11 (mi-juin):** review interne QT + RC + (CIQ si in), itérations.
+- **Semaines 11–12 (début juillet):** finalisation, traduction FR/EN, production PDF + PPTX, validation légale/gouvernance.
+- **Semaine 12 (mi-juillet):** **publication**.
 
-7. **Date cible de publication ?**
-   J'ai mis **septembre 2026** (avant campagne électorale provinciale). Confirme ou ajuste — ça conditionne le tempo de toutes les slides "data à aller chercher".
+# Questions ouvertes restantes
 
-Une fois ces 7 points clarifiés, je peux :
-- Finaliser les slides en version française "quasi-finale"
-- Générer une version `.pptx` ou Google Slides
-- Lancer les analyses manquantes (slides marqués "Status: À faire")
-- Rédiger les demandes formelles aux partenaires pour les données bloquantes
+Les 7 questions originales ont été tranchées. Ce qui reste ouvert :
+
+1. **CIQ co-signataire ou non ?** Impact sur le ton (plus policy-oriented si in) et sur la légitimité des recommandations de politique publique. Décision avant fin avril.
+2. **Nommage des recommandations ?** 4 placeholders dans le deck. Leur formulation dépend du résultat des analyses — à trancher au mois de juin lors du draft v1.
+3. **Design / identité visuelle ?** Avec la co-signature QT+RC, qui pilote le design final ? Budget visualisation externe ou interne ?
+4. **Traduction EN:** bilingue à la publication ou FR d'abord, EN 2–4 semaines plus tard ? Décision avant fin juin.
+
+Dis-moi quand tu veux :
+- Que je produise une version **`.pptx`** (squelette navigable) à partir de ce Day Zero
+- Que je rédige la **demande formelle à Réseau Capital** pour l'accès aux données
+- Que je lance les **analyses manquantes** (Q5 à rouler, slides 7, 10, 13, 15, 20, 27)
+- Qu'on valide ensemble le **document taxonomie** avant figement
