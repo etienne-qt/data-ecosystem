@@ -33,19 +33,15 @@
    V_MANUAL_REVIEW_CURRENT.
 
    Upstream dependency: GOLD.STARTUP_REGISTRY must be freshly built
-   via pipelines/transforms/registry/80_consolidated_startup_registry.sql
-   so IS_STARTUP_WHITELISTED / IS_STARTUP_BLACKLISTED / DRM_RATING_RAW
-   / DRM_FUNDING_USD_M / HAS_RC_MATCH_* / DRM_COMPANY_STATUS are current.
+   via pipelines/transforms/registry/80_consolidated_startup_registry.sql.
 
-   Signal reference (all columns already in GOLD.STARTUP_REGISTRY):
-     - DRM_RATING_RAW           'A+' | 'A' | 'B' | 'C' | 'D' | NULL
-     - DRM_FUNDING_USD_M        numeric, millions USD, Dealroom
-     - CANONICAL_FOUNDING_YEAR  COALESCE(DRM, RC)
-     - DRM_COMPANY_STATUS       'operational' | 'acquired' | 'closed' | 'low-activity'
-     - RC_BUSINESS_STATUS       free-text, RC side
-     - FLAG_NON_TECH_NAME_HIT   boolean
-     - ENTITY_TYPE              'MATCHED' | 'QT_ONLY' | 'RC_ONLY'
-     - WHITELIST_NOTE / BLACKLIST_NOTE / RC_WHITELIST_NOTE / RC_BLACKLIST_NOTE
+   Schema notes (verified 2026-04-21 from stage 80):
+     - Primary key is REGISTRY_ID (not REGISTRY_KEY).
+     - Canonical URL column is CANONICAL_DOMAIN (not CANONICAL_WEBSITE_DOMAIN).
+     - IS_STARTUP_WHITELISTED / IS_STARTUP_BLACKLISTED are in the registry,
+       but the DECISION_NOTE text is NOT — we fetch it by joining
+       REF.V_STARTUP_WHITELIST / REF.V_STARTUP_BLACKLIST on DEALROOM_ID
+       and/or RC_COMPANY_ID.
 
    Author: AI Agent (Quebec Tech Data & Analytics)
    Date:   2026-04-21
@@ -68,15 +64,48 @@ FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY;
 
 
 /* ============================================================
+   SHARED CTE — registry enriched with review notes
+   ============================================================
+   Joins V_STARTUP_{WHITELIST,BLACKLIST} on both DEALROOM_ID and
+   RC_COMPANY_ID so we see the operator's DECISION_NOTE even when
+   the decision was made on one side of a MATCHED pair only.
+
+   Every section below queries this CTE. Snowflake won't let us
+   define it once in a separate statement (no global CTE in
+   Snowsight's multi-statement flow); the CTE is redefined in each
+   SELECT. The definition is short, so duplication is acceptable.
+   ============================================================ */
+
+
+/* ============================================================
    SECTION 1 — BLACKLIST AUDIT: HEADLINE COUNTS BY CONFLICT TYPE
    ============================================================
    A single company can hit multiple conflict flags; counts are
    NOT mutually exclusive.
    ============================================================ */
 
-WITH bl AS (
+WITH enriched AS (
     SELECT
-        REGISTRY_KEY,
+        r.*,
+        COALESCE(bl_dr.DECISION_NOTE, bl_rc.DECISION_NOTE) AS BL_NOTE,
+        COALESCE(wl_dr.DECISION_NOTE, wl_rc.DECISION_NOTE) AS WL_NOTE
+    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_dr
+      ON bl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND bl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_rc
+      ON bl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND bl_rc.DEALROOM_ID   IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST wl_dr
+      ON wl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND wl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST wl_rc
+      ON wl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND wl_rc.DEALROOM_ID   IS NULL
+),
+bl AS (
+    SELECT
+        REGISTRY_ID,
         CANONICAL_NAME,
         ENTITY_TYPE,
         DRM_RATING_RAW,
@@ -85,18 +114,18 @@ WITH bl AS (
         RC_BUSINESS_STATUS,
         CANONICAL_FOUNDING_YEAR,
         FLAG_NON_TECH_NAME_HIT,
-        COALESCE(BLACKLIST_NOTE, RC_BLACKLIST_NOTE) AS BL_NOTE,
-        -- Signal flags
+        BL_NOTE,
         IFF(DRM_RATING_RAW IN ('A+','A','B'), TRUE, FALSE)        AS SIG_STRONG_RATING,
         IFF(COALESCE(DRM_FUNDING_USD_M, 0) >= 1, TRUE, FALSE)     AS SIG_FUNDING_1M,
         IFF(ENTITY_TYPE IN ('MATCHED','RC_ONLY'), TRUE, FALSE)    AS SIG_RC_MATCH,
         IFF(DRM_COMPANY_STATUS IN ('acquired','closed','low-activity')
-            OR LOWER(COALESCE(RC_BUSINESS_STATUS,'')) RLIKE '.*(acquir|closed|dissolv|inactive|defunct).*',
+            OR LOWER(COALESCE(RC_BUSINESS_STATUS,'')) RLIKE
+                '.*(acquir|closed|dissolv|inactive|defunct).*',
             TRUE, FALSE)                                          AS STATE_MATURE_OR_CLOSED,
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
+        IFF(LOWER(COALESCE(BL_NOTE,''))
               RLIKE '.*(old|mature|closed|acquir|dissolv|inactive|defunct|stopped|ceased).*',
             TRUE, FALSE)                                          AS NOTE_INVALID_REASON
-    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+    FROM enriched
     WHERE IS_STARTUP_BLACKLISTED
 )
 SELECT
@@ -117,7 +146,9 @@ SELECT 'BLACKLIST_INVALID_REASON_NOTE (old/closed/acquired/dissolved — not a d
        COUNT(*) FROM bl WHERE NOTE_INVALID_REASON
 UNION ALL
 SELECT 'BLACKLIST_MATURE_OR_CLOSED_WITH_PAST_STARTUP_SIGNALS',
-       COUNT(*) FROM bl WHERE STATE_MATURE_OR_CLOSED AND (SIG_STRONG_RATING OR SIG_FUNDING_1M OR SIG_RC_MATCH)
+       COUNT(*) FROM bl
+       WHERE STATE_MATURE_OR_CLOSED
+         AND (SIG_STRONG_RATING OR SIG_FUNDING_1M OR SIG_RC_MATCH)
 UNION ALL
 SELECT 'BLACKLIST_ANY_CONFLICT (union of above)',
        COUNT(*) FROM bl
@@ -138,11 +169,23 @@ ORDER BY n DESC;
    Save as CSV; this is the first re-review batch.
    ============================================================ */
 
-WITH bl AS (
+WITH enriched AS (
     SELECT
-        REGISTRY_KEY,
+        r.*,
+        COALESCE(bl_dr.DECISION_NOTE, bl_rc.DECISION_NOTE) AS BL_NOTE
+    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_dr
+      ON bl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND bl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_rc
+      ON bl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND bl_rc.DEALROOM_ID   IS NULL
+),
+bl AS (
+    SELECT
+        REGISTRY_ID,
         CANONICAL_NAME,
-        CANONICAL_WEBSITE_DOMAIN,
+        CANONICAL_DOMAIN,
         CANONICAL_FOUNDING_YEAR,
         ENTITY_TYPE,
         DRM_RATING_RAW,
@@ -150,37 +193,34 @@ WITH bl AS (
         DRM_COMPANY_STATUS,
         RC_BUSINESS_STATUS,
         DRM_TOP_INDUSTRY,
-        COALESCE(DEALROOM_ID, '')                AS DEALROOM_ID,
-        COALESCE(RC_COMPANY_ID, '')              AS RC_COMPANY_ID,
-        COALESCE(BLACKLIST_NOTE,
-                 RC_BLACKLIST_NOTE)              AS BL_NOTE,
+        COALESCE(DEALROOM_ID::VARCHAR, '')       AS DEALROOM_ID_STR,
+        COALESCE(RC_COMPANY_ID, '')              AS RC_COMPANY_ID_STR,
+        BL_NOTE,
         IFF(DRM_RATING_RAW IN ('A+','A','B'), TRUE, FALSE)                               AS SIG_STRONG_RATING,
         IFF(COALESCE(DRM_FUNDING_USD_M, 0) >= 1, TRUE, FALSE)                            AS SIG_FUNDING_1M,
         IFF(ENTITY_TYPE IN ('MATCHED','RC_ONLY'), TRUE, FALSE)                           AS SIG_RC_MATCH,
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
+        IFF(LOWER(COALESCE(BL_NOTE,''))
               RLIKE '.*(old|mature|closed|acquir|dissolv|inactive|defunct|stopped|ceased).*',
             TRUE, FALSE)                                                                 AS NOTE_INVALID_REASON
-    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+    FROM enriched
     WHERE IS_STARTUP_BLACKLISTED
 )
 SELECT
-    -- Priority 1 = strong rating; 2 = funding or RC match; 3 = invalid-reason note only.
     CASE
         WHEN SIG_STRONG_RATING                                        THEN 1
         WHEN SIG_FUNDING_1M OR SIG_RC_MATCH                           THEN 2
         WHEN NOTE_INVALID_REASON                                      THEN 3
         ELSE 4
     END                                                               AS conflict_priority,
-    -- Short label for the reviewer spreadsheet.
     ARRAY_TO_STRING(ARRAY_COMPACT(ARRAY_CONSTRUCT(
         IFF(SIG_STRONG_RATING, 'STRONG_RATING(' || DRM_RATING_RAW || ')', NULL),
         IFF(SIG_FUNDING_1M, 'FUNDING($' || TO_VARCHAR(ROUND(DRM_FUNDING_USD_M,1)) || 'M)', NULL),
         IFF(SIG_RC_MATCH, 'RC_MATCH', NULL),
         IFF(NOTE_INVALID_REASON, 'INVALID_REASON_NOTE', NULL)
     )), ' · ')                                                        AS conflict_flags,
-    REGISTRY_KEY,
+    REGISTRY_ID,
     CANONICAL_NAME,
-    CANONICAL_WEBSITE_DOMAIN,
+    CANONICAL_DOMAIN,
     CANONICAL_FOUNDING_YEAR,
     ENTITY_TYPE,
     DRM_RATING_RAW,
@@ -188,10 +228,9 @@ SELECT
     DRM_COMPANY_STATUS,
     RC_BUSINESS_STATUS,
     DRM_TOP_INDUSTRY,
-    DEALROOM_ID,
-    RC_COMPANY_ID,
+    DEALROOM_ID_STR                                                   AS DEALROOM_ID,
+    RC_COMPANY_ID_STR                                                 AS RC_COMPANY_ID,
     BL_NOTE,
-    -- Proposed action for the operator spreadsheet.
     'PROMOTE_TO_FOR_REVIEW'                                           AS proposed_action,
     'RECLASSIFY_BLACKLIST_' ||
         CASE
@@ -215,7 +254,7 @@ ORDER BY conflict_priority, DRM_FUNDING_USD_M DESC NULLS LAST, DRM_RATING_RAW;
 
 WITH wl AS (
     SELECT
-        REGISTRY_KEY,
+        REGISTRY_ID,
         DRM_RATING_RAW,
         DRM_FUNDING_USD_M,
         ENTITY_TYPE,
@@ -246,29 +285,32 @@ SELECT 'WHITELIST_NON_TECH_NAME',
        COUNT(*) FROM wl WHERE FLAG_NON_TECH_NAME_HIT
 UNION ALL
 SELECT 'WHITELIST_ALL_SIGNALS_MISSING (no rating AND no funding AND no RC match)',
-       COUNT(*) FROM wl WHERE GAP_NO_STRONG_RATING AND GAP_NO_MEANINGFUL_FUNDING AND GAP_NO_RC_MATCH
+       COUNT(*) FROM wl
+       WHERE GAP_NO_STRONG_RATING AND GAP_NO_MEANINGFUL_FUNDING AND GAP_NO_RC_MATCH
 ORDER BY n DESC;
 
 
 /* ============================================================
    SECTION 4 — WHITELIST WITH NO SUPPORTING SIGNALS: DETAIL
-   ============================================================
-   Whitelist entries where ALL of the following are true:
-     - No strong Dealroom rating
-     - No meaningful funding
-     - No RC match
-
-   Optionally also: FLAG_NON_TECH_NAME_HIT (name looks non-tech).
-
-   These are the weakest whitelist calls — most likely to be
-   "I wasn't sure, so I said yes" decisions that deserve a second look.
    ============================================================ */
 
-WITH wl AS (
+WITH enriched AS (
     SELECT
-        REGISTRY_KEY,
+        r.*,
+        COALESCE(wl_dr.DECISION_NOTE, wl_rc.DECISION_NOTE) AS WL_NOTE
+    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST wl_dr
+      ON wl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND wl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST wl_rc
+      ON wl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND wl_rc.DEALROOM_ID   IS NULL
+),
+wl AS (
+    SELECT
+        REGISTRY_ID,
         CANONICAL_NAME,
-        CANONICAL_WEBSITE_DOMAIN,
+        CANONICAL_DOMAIN,
         CANONICAL_FOUNDING_YEAR,
         ENTITY_TYPE,
         DRM_RATING_RAW,
@@ -276,20 +318,19 @@ WITH wl AS (
         DRM_COMPANY_STATUS,
         DRM_TOP_INDUSTRY,
         FLAG_NON_TECH_NAME_HIT,
-        COALESCE(DEALROOM_ID, '')                AS DEALROOM_ID,
-        COALESCE(RC_COMPANY_ID, '')              AS RC_COMPANY_ID,
-        COALESCE(WHITELIST_NOTE,
-                 RC_WHITELIST_NOTE)              AS WL_NOTE,
+        COALESCE(DEALROOM_ID::VARCHAR, '')       AS DEALROOM_ID_STR,
+        COALESCE(RC_COMPANY_ID, '')              AS RC_COMPANY_ID_STR,
+        WL_NOTE,
         IFF(DRM_RATING_RAW IS NULL OR DRM_RATING_RAW NOT IN ('A+','A','B'), TRUE, FALSE) AS GAP_NO_STRONG_RATING,
         IFF(COALESCE(DRM_FUNDING_USD_M, 0) < 0.5, TRUE, FALSE)                           AS GAP_NO_MEANINGFUL_FUNDING,
         IFF(ENTITY_TYPE = 'QT_ONLY', TRUE, FALSE)                                        AS GAP_NO_RC_MATCH
-    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+    FROM enriched
     WHERE IS_STARTUP_WHITELISTED
 )
 SELECT
     CASE
         WHEN GAP_NO_STRONG_RATING AND GAP_NO_MEANINGFUL_FUNDING AND GAP_NO_RC_MATCH
-             AND FLAG_NON_TECH_NAME_HIT                                     THEN 1  -- worst
+             AND FLAG_NON_TECH_NAME_HIT                                     THEN 1
         WHEN GAP_NO_STRONG_RATING AND GAP_NO_MEANINGFUL_FUNDING AND GAP_NO_RC_MATCH THEN 2
         WHEN FLAG_NON_TECH_NAME_HIT                                         THEN 3
         ELSE 4
@@ -300,17 +341,17 @@ SELECT
         IFF(GAP_NO_RC_MATCH, 'NO_RC_MATCH', NULL),
         IFF(FLAG_NON_TECH_NAME_HIT, 'NON_TECH_NAME_HIT', NULL)
     )), ' · ')                                                             AS signal_gaps,
-    REGISTRY_KEY,
+    REGISTRY_ID,
     CANONICAL_NAME,
-    CANONICAL_WEBSITE_DOMAIN,
+    CANONICAL_DOMAIN,
     CANONICAL_FOUNDING_YEAR,
     ENTITY_TYPE,
     DRM_RATING_RAW,
     DRM_FUNDING_USD_M,
     DRM_COMPANY_STATUS,
     DRM_TOP_INDUSTRY,
-    DEALROOM_ID,
-    RC_COMPANY_ID,
+    DEALROOM_ID_STR                                                        AS DEALROOM_ID,
+    RC_COMPANY_ID_STR                                                      AS RC_COMPANY_ID,
     WL_NOTE,
     'PROMOTE_TO_FOR_REVIEW'                                                AS proposed_action,
     'RECLASSIFY_WHITELIST_NO_SUPPORTING_SIGNALS'                           AS proposed_review_label
@@ -324,18 +365,27 @@ ORDER BY signal_gap_priority, DRM_FUNDING_USD_M ASC NULLS FIRST, CANONICAL_NAME;
    SECTION 5 — OLD / MATURE / CLOSED BLACKLIST ENTRIES
    ============================================================
    Per the directive: an old, mature, or closed startup is STILL
-   a startup. We want to surface every blacklist entry whose state
-   or note suggests it was disqualified for that reason.
-
-   Separate from section 2 so it's visible even when there's no
-   other signal — the "reason invalid per policy" alone justifies
-   a re-review.
+   a startup. We surface every blacklist entry whose state or note
+   suggests disqualification-by-maturity — even if no other signal
+   is present.
    ============================================================ */
 
+WITH enriched AS (
+    SELECT
+        r.*,
+        COALESCE(bl_dr.DECISION_NOTE, bl_rc.DECISION_NOTE) AS BL_NOTE
+    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_dr
+      ON bl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND bl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_rc
+      ON bl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND bl_rc.DEALROOM_ID   IS NULL
+)
 SELECT
-    REGISTRY_KEY,
+    REGISTRY_ID,
     CANONICAL_NAME,
-    CANONICAL_WEBSITE_DOMAIN,
+    CANONICAL_DOMAIN,
     CANONICAL_FOUNDING_YEAR,
     ENTITY_TYPE,
     DRM_RATING_RAW,
@@ -343,31 +393,25 @@ SELECT
     DRM_COMPANY_STATUS,
     RC_BUSINESS_STATUS,
     DRM_TOP_INDUSTRY,
-    COALESCE(DEALROOM_ID, '')                AS DEALROOM_ID,
-    COALESCE(RC_COMPANY_ID, '')              AS RC_COMPANY_ID,
-    COALESCE(BLACKLIST_NOTE, RC_BLACKLIST_NOTE) AS BL_NOTE,
-    -- Which invalid-reason tokens appeared?
+    COALESCE(DEALROOM_ID::VARCHAR, '')        AS DEALROOM_ID,
+    COALESCE(RC_COMPANY_ID, '')               AS RC_COMPANY_ID,
+    BL_NOTE,
     ARRAY_TO_STRING(ARRAY_COMPACT(ARRAY_CONSTRUCT(
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
-              LIKE '%old%', 'old', NULL),
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
-              LIKE '%mature%', 'mature', NULL),
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
-              LIKE '%closed%', 'closed', NULL),
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
-              LIKE '%acquir%', 'acquired', NULL),
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
-              LIKE '%dissolv%', 'dissolved', NULL),
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
-              LIKE '%inactive%', 'inactive', NULL),
-        IFF(DRM_COMPANY_STATUS IN ('acquired','closed','low-activity'), 'state=' || DRM_COMPANY_STATUS, NULL)
-    )), ', ')                                                               AS invalid_reason_tokens,
-    'PROMOTE_TO_FOR_REVIEW'                                                 AS proposed_action,
-    'RECLASSIFY_BLACKLIST_MATURITY_OR_STATE_NOT_A_DISQUALIFIER'             AS proposed_review_label
-FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+        IFF(LOWER(COALESCE(BL_NOTE,'')) LIKE '%old%',      'old',       NULL),
+        IFF(LOWER(COALESCE(BL_NOTE,'')) LIKE '%mature%',   'mature',    NULL),
+        IFF(LOWER(COALESCE(BL_NOTE,'')) LIKE '%closed%',   'closed',    NULL),
+        IFF(LOWER(COALESCE(BL_NOTE,'')) LIKE '%acquir%',   'acquired',  NULL),
+        IFF(LOWER(COALESCE(BL_NOTE,'')) LIKE '%dissolv%',  'dissolved', NULL),
+        IFF(LOWER(COALESCE(BL_NOTE,'')) LIKE '%inactive%', 'inactive',  NULL),
+        IFF(DRM_COMPANY_STATUS IN ('acquired','closed','low-activity'),
+            'state=' || DRM_COMPANY_STATUS, NULL)
+    )), ', ')                                                            AS invalid_reason_tokens,
+    'PROMOTE_TO_FOR_REVIEW'                                              AS proposed_action,
+    'RECLASSIFY_BLACKLIST_MATURITY_OR_STATE_NOT_A_DISQUALIFIER'          AS proposed_review_label
+FROM enriched
 WHERE IS_STARTUP_BLACKLISTED
   AND (
-    LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
+    LOWER(COALESCE(BL_NOTE,''))
       RLIKE '.*(old|mature|closed|acquir|dissolv|inactive|defunct|stopped|ceased).*'
     OR DRM_COMPANY_STATUS IN ('acquired','closed','low-activity')
   )
@@ -378,53 +422,72 @@ ORDER BY CANONICAL_FOUNDING_YEAR NULLS LAST, DRM_FUNDING_USD_M DESC NULLS LAST;
    SECTION 6 — UNIFIED RE-REVIEW QUEUE (TOP 200)
    ============================================================
    Merges sections 2, 4, and 5 into one priority-sorted queue.
-   This is the CSV to export and hand to the reviewer:
+   Export this as re_review_queue_YYYYMMDD.csv and hand to reviewer:
 
-     1. Export as re_review_queue_YYYYMMDD.csv
-     2. Operator adds a DECISION column in Google Sheets
-        (YES = is startup / NO = not a startup) and fills DECISION_NOTE
-     3. Upload via REF.MERGE_REVIEW_UPLOAD — new row overrides the old
-        decision via V_MANUAL_REVIEW_CURRENT
-     4. Rerun pipelines/transforms/registry/80_... to apply decisions
+     1. Export as CSV.
+     2. Operator fills NEW_DECISION_VALUE ('YES' / 'NO') and
+        NEW_DECISION_NOTE in Google Sheets.
+     3. Upload via REF.MERGE_REVIEW_UPLOAD — new row overrides the
+        old decision via V_MANUAL_REVIEW_CURRENT (append-only).
+     4. Rerun stage 80 to apply.
 
    Priorities (lower = more urgent):
      1. Blacklist with STRONG_RATING (A+/A/B)
-     2. Whitelist missing all signals AND non-tech name (worst false positive)
+     2. Whitelist missing all signals AND non-tech name
      3. Blacklist with FUNDING or RC_MATCH conflict
-     4. Blacklist with INVALID_REASON_NOTE (old/closed/etc.)
+     4. Blacklist with INVALID_REASON_NOTE
      5. Whitelist missing all 3 signal types
      6. Whitelist non-tech name (signal present)
    ============================================================ */
 
-WITH blk AS (
+WITH enriched AS (
     SELECT
-        REGISTRY_KEY, CANONICAL_NAME, CANONICAL_WEBSITE_DOMAIN,
+        r.*,
+        COALESCE(bl_dr.DECISION_NOTE, bl_rc.DECISION_NOTE) AS BL_NOTE,
+        COALESCE(wl_dr.DECISION_NOTE, wl_rc.DECISION_NOTE) AS WL_NOTE
+    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_dr
+      ON bl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND bl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_rc
+      ON bl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND bl_rc.DEALROOM_ID   IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST wl_dr
+      ON wl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND wl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_WHITELIST wl_rc
+      ON wl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND wl_rc.DEALROOM_ID   IS NULL
+),
+blk AS (
+    SELECT
+        REGISTRY_ID, CANONICAL_NAME, CANONICAL_DOMAIN,
         CANONICAL_FOUNDING_YEAR, ENTITY_TYPE, DRM_RATING_RAW,
         DRM_FUNDING_USD_M, DRM_COMPANY_STATUS, DRM_TOP_INDUSTRY,
-        COALESCE(DEALROOM_ID, '')      AS DEALROOM_ID,
-        COALESCE(RC_COMPANY_ID, '')    AS RC_COMPANY_ID,
-        COALESCE(BLACKLIST_NOTE, RC_BLACKLIST_NOTE) AS CURRENT_NOTE,
-        'BLACKLIST'                    AS CURRENT_LIST,
+        COALESCE(DEALROOM_ID::VARCHAR, '')  AS DEALROOM_ID_STR,
+        COALESCE(RC_COMPANY_ID, '')         AS RC_COMPANY_ID_STR,
+        BL_NOTE                             AS CURRENT_NOTE,
+        'BLACKLIST'                         AS CURRENT_LIST,
         IFF(DRM_RATING_RAW IN ('A+','A','B'), TRUE, FALSE)                               AS b_strong_rating,
         IFF(COALESCE(DRM_FUNDING_USD_M, 0) >= 1, TRUE, FALSE)                            AS b_funding,
         IFF(ENTITY_TYPE IN ('MATCHED','RC_ONLY'), TRUE, FALSE)                           AS b_rc_match,
-        IFF(LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
+        IFF(LOWER(COALESCE(BL_NOTE,''))
               RLIKE '.*(old|mature|closed|acquir|dissolv|inactive|defunct|stopped|ceased).*',
             TRUE, FALSE)                                                                 AS b_invalid_note,
         FALSE AS w_non_tech,
         FALSE AS w_all_missing
-    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+    FROM enriched
     WHERE IS_STARTUP_BLACKLISTED
 ),
 wht AS (
     SELECT
-        REGISTRY_KEY, CANONICAL_NAME, CANONICAL_WEBSITE_DOMAIN,
+        REGISTRY_ID, CANONICAL_NAME, CANONICAL_DOMAIN,
         CANONICAL_FOUNDING_YEAR, ENTITY_TYPE, DRM_RATING_RAW,
         DRM_FUNDING_USD_M, DRM_COMPANY_STATUS, DRM_TOP_INDUSTRY,
-        COALESCE(DEALROOM_ID, '')      AS DEALROOM_ID,
-        COALESCE(RC_COMPANY_ID, '')    AS RC_COMPANY_ID,
-        COALESCE(WHITELIST_NOTE, RC_WHITELIST_NOTE) AS CURRENT_NOTE,
-        'WHITELIST'                    AS CURRENT_LIST,
+        COALESCE(DEALROOM_ID::VARCHAR, '')  AS DEALROOM_ID_STR,
+        COALESCE(RC_COMPANY_ID, '')         AS RC_COMPANY_ID_STR,
+        WL_NOTE                             AS CURRENT_NOTE,
+        'WHITELIST'                         AS CURRENT_LIST,
         FALSE AS b_strong_rating,
         FALSE AS b_funding,
         FALSE AS b_rc_match,
@@ -433,7 +496,7 @@ wht AS (
         (IFF(DRM_RATING_RAW IS NULL OR DRM_RATING_RAW NOT IN ('A+','A','B'), TRUE, FALSE)
          AND IFF(COALESCE(DRM_FUNDING_USD_M, 0) < 0.5, TRUE, FALSE)
          AND IFF(ENTITY_TYPE = 'QT_ONLY', TRUE, FALSE))                                  AS w_all_missing
-    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+    FROM enriched
     WHERE IS_STARTUP_WHITELISTED
 ),
 unioned AS (
@@ -454,7 +517,6 @@ SELECT
         ELSE 9
     END                                                                   AS priority,
     CURRENT_LIST,
-    -- Concise label for spreadsheet triage
     CASE
         WHEN CURRENT_LIST = 'BLACKLIST' AND b_strong_rating                THEN 'BL_STRONG_RATING'
         WHEN CURRENT_LIST = 'BLACKLIST' AND b_funding                      THEN 'BL_FUNDING'
@@ -465,20 +527,19 @@ SELECT
         WHEN CURRENT_LIST = 'WHITELIST' AND w_non_tech                     THEN 'WL_NON_TECH_NAME'
         ELSE 'OTHER'
     END                                                                   AS conflict_label,
-    REGISTRY_KEY,
+    REGISTRY_ID,
     CANONICAL_NAME,
-    CANONICAL_WEBSITE_DOMAIN,
+    CANONICAL_DOMAIN,
     CANONICAL_FOUNDING_YEAR,
     ENTITY_TYPE,
     DRM_RATING_RAW,
     DRM_FUNDING_USD_M,
     DRM_COMPANY_STATUS,
     DRM_TOP_INDUSTRY,
-    DEALROOM_ID,
-    RC_COMPANY_ID,
+    DEALROOM_ID_STR                                                       AS DEALROOM_ID,
+    RC_COMPANY_ID_STR                                                     AS RC_COMPANY_ID,
     CURRENT_NOTE,
-    -- Columns for the operator spreadsheet to fill in:
-    CAST(NULL AS VARCHAR)                                                 AS NEW_DECISION_VALUE,   -- 'YES' or 'NO'
+    CAST(NULL AS VARCHAR)                                                 AS NEW_DECISION_VALUE,
     CAST(NULL AS VARCHAR)                                                 AS NEW_DECISION_NOTE,
     'manual_review_audit_' ||
         TO_VARCHAR(CURRENT_DATE(), 'YYYYMMDD')                            AS REVIEW_BATCH
@@ -488,10 +549,7 @@ LIMIT 200;
 
 
 /* ============================================================
-   SECTION 7 — SIDE-BY-SIDE TOTALS AFTER PROPOSED RECLASSIFICATION
-   ============================================================
-   A what-if estimate of registry impact if every item surfaced
-   above were moved from {whitelist, blacklist} to FOR_REVIEW.
+   SECTION 7 — WHAT-IF TOTALS AFTER PROPOSED RECLASSIFICATION
    ============================================================ */
 
 WITH current_counts AS (
@@ -501,15 +559,27 @@ WITH current_counts AS (
         COUNT(*) AS curr_total
     FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
 ),
+enriched AS (
+    SELECT
+        r.*,
+        COALESCE(bl_dr.DECISION_NOTE, bl_rc.DECISION_NOTE) AS BL_NOTE
+    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY r
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_dr
+      ON bl_dr.DEALROOM_ID   = r.DEALROOM_ID::VARCHAR
+     AND bl_dr.RC_COMPANY_ID IS NULL
+    LEFT JOIN DEV_QUEBECTECH.REF.V_STARTUP_BLACKLIST bl_rc
+      ON bl_rc.RC_COMPANY_ID = r.RC_COMPANY_ID
+     AND bl_rc.DEALROOM_ID   IS NULL
+),
 bl_flagged AS (
     SELECT COUNT(*) AS n
-    FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY
+    FROM enriched
     WHERE IS_STARTUP_BLACKLISTED
       AND (
           DRM_RATING_RAW IN ('A+','A','B')
           OR COALESCE(DRM_FUNDING_USD_M, 0) >= 1
           OR ENTITY_TYPE IN ('MATCHED','RC_ONLY')
-          OR LOWER(COALESCE(BLACKLIST_NOTE,'') || ' ' || COALESCE(RC_BLACKLIST_NOTE,''))
+          OR LOWER(COALESCE(BL_NOTE,''))
              RLIKE '.*(old|mature|closed|acquir|dissolv|inactive|defunct|stopped|ceased).*'
       )
 ),
@@ -532,7 +602,7 @@ SELECT
     c.curr_wl - w.n                                     AS whitelist_after,
     c.curr_bl - b.n                                     AS blacklist_after,
     w.n + b.n                                           AS review_queue_size,
-    ROUND(100.0 * (w.n + b.n) / (c.curr_wl + c.curr_bl), 1)
+    ROUND(100.0 * (w.n + b.n) / NULLIF(c.curr_wl + c.curr_bl, 0), 1)
                                                         AS pct_of_decisions_flagged
 FROM current_counts c, bl_flagged b, wl_flagged w;
 
