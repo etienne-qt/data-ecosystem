@@ -63,7 +63,7 @@ SELECT
     COUNT(*)                                  AS n_rows,
     SUM(IFF(IS_STARTUP_WHITELISTED, 1, 0))    AS n_whitelisted,
     SUM(IFF(IS_STARTUP_BLACKLISTED, 1, 0))    AS n_blacklisted,
-    MAX(LAST_UPDATED_AT)                      AS last_build
+    MAX(REGISTRY_BUILT_AT)                    AS last_build
 FROM DEV_QUEBECTECH.GOLD.STARTUP_REGISTRY;
 
 
